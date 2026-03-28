@@ -49,7 +49,7 @@ namespace TeamNut
             Frame rootFrame = new Frame();
             _window.Content = rootFrame;
 
-            rootFrame.Navigate(typeof(RegisterView));
+            rootFrame.Navigate(typeof(MealsPage));
 
             _window.Activate();
         }
