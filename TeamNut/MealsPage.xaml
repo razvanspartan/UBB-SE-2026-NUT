@@ -4,70 +4,144 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TeamNut">
 
-	<Page.Resources>
-		<local:StarConverter x:Key="StarConverter"/>
-	</Page.Resources>
+    <Page.Resources>
+        <local:StarConverter x:Key="StarConverter"/>
+    </Page.Resources>
 
-	<StackPanel Padding="20" Spacing="12">
+    <Grid Padding="20">
 
-		<TextBox x:Name="txtSearch"
-         PlaceholderText="Search meal..."
-         Margin="0,0,0,10"
-         KeyDown="txtSearch_KeyDown"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <Button Content="Filters"
-        Click="OpenFilters_Click"
-        Margin="0,0,0,10"/>
-        <Button Content="Filters" Click="OpenFilters_Click" Margin="0,0,0,10"/>
-		<ListView x:Name="listMeals">
-			<ListView.ItemTemplate>
-				<DataTemplate>
-					<Grid Padding="10" Margin="5" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-						BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="10">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="*"/>
-							<ColumnDefinition Width="Auto"/>
-						</Grid.ColumnDefinitions>
+        <!-- SEARCH BAR -->
+        <StackPanel Orientation="Horizontal"
+            Spacing="10"
+            Margin="0,0,0,10">
 
-						<!-- TEXT -->
-						<StackPanel>
-							<TextBlock Text="{Binding Name}"
-									   FontSize="17"
-									   FontWeight="SemiBold"/>
+            <TextBox x:Name="txtSearch"
+             PlaceholderText="Search meal..."
+             Width="300"
+             KeyDown="txtSearch_KeyDown"/>
 
-                            <TextBlock Opacity="0.75">
-								<Run Text="{Binding Calories}" />
-								<Run Text=" kcal" />
-							</TextBlock>
+            <Button Content="Search"
+            Click="btnSearch_Click"/>
 
-							<TextBlock Opacity="0.6" FontSize="12">
-								<Run Text="{Binding Protein}" />
-								<Run Text="g protein" />
-							</TextBlock>
+            <Button Content="Filters">
 
-							<TextBlock Opacity="0.6" FontSize="12">
-								<Run Text="{Binding Carbs}" />
-								<Run Text="g carbs" />
-							</TextBlock>
+                <Button.Flyout>
+                    <Flyout>
+                        <StackPanel Padding="10" Spacing="5">
+                            <CheckBox Content="Vegan" Checked="FilterChanged" Unchecked="FilterChanged"/>
+                            <CheckBox Content="Keto" Checked="FilterChanged" Unchecked="FilterChanged"/>
+                            <CheckBox Content="Gluten Free" Checked="FilterChanged" Unchecked="FilterChanged"/>
+                            <CheckBox Content="Lactose Free" Checked="FilterChanged" Unchecked="FilterChanged"/>
+                            <CheckBox Content="No Nuts" Checked="FilterChanged" Unchecked="FilterChanged"/>
+                            <CheckBox Content="Favorites Only" Checked="FilterChanged" Unchecked="FilterChanged"/>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
 
-							<TextBlock Opacity="0.6" FontSize="12">
-								<Run Text="{Binding Fat}" />
-								<Run Text="g fat" />
-							</TextBlock>
-						</StackPanel>
+            </Button>
 
-						<!-- STAR -->
-						<Button Grid.Column="1"
-							Click="Favorite_Click"
-							FontSize="22"
-							Background="Transparent"
-							BorderThickness="0"
-							Foreground="Gold"
-							Content="{Binding IsFavorite, Converter={StaticResource StarConverter}}"/>
-					</Grid>
-				</DataTemplate>
-			</ListView.ItemTemplate>
-		</ListView>
+        </StackPanel>
 
-	</StackPanel>
+        <!-- LIST -->
+        <ListView x:Name="listMeals" Grid.Row="2">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="12" Margin="6"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          BorderThickness="1"
+          CornerRadius="12">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Spacing="4">
+
+                            <TextBlock Text="{Binding Name}"
+                       FontSize="18"
+                       FontWeight="SemiBold"/>
+
+                            
+                      <TextBlock Opacity="0.7">
+                        <Run Text="{Binding Calories}" />
+                        <Run Text=" kcal" />        
+                            </TextBlock>
+
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+
+                                <TextBlock Foreground="#4CAF50">
+                                <Run Text="Protein: "/>
+                                <Run Text="{Binding Protein}"/>
+                                <Run Text="g"/>
+                                </TextBlock>
+
+                                <TextBlock Foreground="#2196F3">
+                                <Run Text="Carbs: "/>
+                                <Run Text="{Binding Carbs}"/>
+                                <Run Text="g"/>
+                                </TextBlock>
+
+                                <TextBlock Foreground="#FF9800">
+                                <Run Text="Fat: "/>
+                                <Run Text="{Binding Fat}"/>
+                                <Run Text="g"/>
+                                </TextBlock>
+
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                Click="Favorite_Click"
+                FontSize="22"
+                Background="Transparent"
+                BorderThickness="0"
+                Foreground="Gold"
+                Content="{Binding IsFavorite, Converter={StaticResource StarConverter}}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- PAGINATION FIXED -->
+        <StackPanel Grid.Row="3"
+            Orientation="Horizontal"
+            HorizontalAlignment="Center"
+            Spacing="10"
+            Margin="10">
+
+            <Button x:Name="btnPrevious" Click="Previous_Click">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <FontIcon Glyph="&#xE72B;"/>
+                    <TextBlock Text="Previous"/>
+                </StackPanel>
+            </Button>
+
+            <TextBlock x:Name="txtPageInfo"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                FontSize="14"/>     
+
+            <Button x:Name="btnNext" Click="Next_Click">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Next"/>
+                    <FontIcon Glyph="&#xE72A;"/>
+                </StackPanel>
+            </Button>
+
+           
+
+            
+
+        </StackPanel>
+
+    </Grid>
 </Page>

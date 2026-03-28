@@ -19,7 +19,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Texto topo -->
+        
         <TextBlock 
             Text="Welcome to TeamNut"
             HorizontalAlignment="Center"
@@ -27,7 +27,7 @@
             FontSize="20"
             FontWeight="Bold"/>
 
-        <!-- Área das páginas -->
+        
         <Frame x:Name="MainFrame" Grid.Row="1"/>
 
     </Grid>

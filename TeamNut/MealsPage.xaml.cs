@@ -36,8 +36,49 @@ namespace TeamNut
 
             btnSearch_Click(this, new RoutedEventArgs());
         }
-        
-        
+
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            listMeals.ItemsSource = viewModel.NextPage();
+            UpdateButtons();
+            UpdatePageInfo();
+        }
+
+        private void Previous_Click(object sender, RoutedEventArgs e)
+        {
+            listMeals.ItemsSource = viewModel.PreviousPage();
+            UpdateButtons();
+            UpdatePageInfo();
+        }
+        private void UpdateButtons()
+        {
+            btnNext.IsEnabled = viewModel.HasNextPage();
+            btnPrevious.IsEnabled = viewModel.HasPreviousPage();
+        }
+        private void FilterChanged(object sender, RoutedEventArgs e)
+        {
+            var cb = sender as CheckBox;
+
+            if (cb.Content.ToString() == "Vegan")
+                filterVegan = cb.IsChecked == true;
+
+            if (cb.Content.ToString() == "Keto")
+                filterKeto = cb.IsChecked == true;
+
+            if (cb.Content.ToString() == "Gluten Free")
+                filterGluten = cb.IsChecked == true;
+
+            if (cb.Content.ToString() == "Lactose Free")
+                filterLactose = cb.IsChecked == true;
+
+            if (cb.Content.ToString() == "No Nuts")
+                filterNuts = cb.IsChecked == true;
+
+            if (cb.Content.ToString() == "Favorites Only")
+                filterFavorites = cb.IsChecked == true;
+
+            btnSearch_Click(null, null);
+        }
         private void btnSearch_Click(object sender, RoutedEventArgs e)
         {
             var results = viewModel.SearchMeals(
@@ -49,8 +90,13 @@ namespace TeamNut
                 filterNuts,
                 filterFavorites 
             );
-
+            UpdateButtons();
             listMeals.ItemsSource = results;
+            UpdatePageInfo();
+        }
+        private void UpdatePageInfo()
+        {
+            txtPageInfo.Text = $"Page {viewModel.GetCurrentPageNumber()} / {viewModel.GetTotalPages()}";
         }
         private void txtSearch_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
         {
