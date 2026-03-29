@@ -1,0 +1,54 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TeamNut.Models;
+using TeamNut.Repositories;
+
+namespace TeamNut.Services
+{
+    public class UserService
+    {
+        private readonly UserRepository _userRepository;
+
+        public UserService()
+        {
+            _userRepository = new UserRepository();
+        }
+
+        public async Task<bool> CheckIfUsernameExistsAsync(string username)
+        {
+            var users = await _userRepository.GetAll();
+            return users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public async Task<User> LoginAsync(string username, string password)
+        {
+            var user = await _userRepository.GetByUsernameAndPassword(username, password);
+            if (user != null)
+            {
+                return user;
+            }
+
+            return null;
+        }
+
+        public async Task<User> RegisterUserAsync(User user)
+        {
+            if (await CheckIfUsernameExistsAsync(user.Username))
+            {
+                return null;
+            }
+
+            await _userRepository.Add(user);
+            return user;
+        }
+
+        public async Task<UserData> AddUserDataAsync(UserData data)
+        {
+            await _userRepository.AddUserData(data);
+            return data;
+        }
+    }
+}

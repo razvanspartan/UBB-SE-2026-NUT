@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using TeamNut.ModelViews;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
@@ -23,9 +24,11 @@ namespace TeamNut.Views.UserView
     /// </summary>
     public sealed partial class UserDataPage : Page
     {
+        public UserViewModel ViewModel => App.MainViewModel;
         public UserDataPage()
         {
             InitializeComponent();
+            this.DataContext = ViewModel;
         }
     }
 }
