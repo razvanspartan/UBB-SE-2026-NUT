@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TeamNut
+﻿namespace TeamNut.Models
 {
-    internal class MealFIlter
+    public class MealFilter
     {
+        public string Query { get; set; }
     }
 }
