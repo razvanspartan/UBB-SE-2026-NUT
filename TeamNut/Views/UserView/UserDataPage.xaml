@@ -33,22 +33,27 @@
                     <TextBox 
                      Header="Weight (kg)" 
                      PlaceholderText="Positive whole number"
+                     Text="{x:Bind ViewModel.CurrentUserData.Weight, Mode=TwoWay}"
                      x:Name="WeightInput"/>
 
                     <TextBox 
                      Header="Height (cm)" 
                      PlaceholderText="Positive whole number"
+                     Text="{x:Bind ViewModel.CurrentUserData.Height, Mode=TwoWay}"
                      x:Name="HeightInput"/>
 
                     <CalendarDatePicker 
                      Header="Birthdate" 
                      PlaceholderText="Select a date"
+                     Date="{Binding ViewModel.SelectedDate, Mode=TwoWay}"
                      x:Name="BirthdateInput"
                      HorizontalAlignment="Stretch"/>
 
                     <ComboBox 
                      Header="Gender" 
                      PlaceholderText="Select gender"
+                     SelectedValue="{x:Bind ViewModel.CurrentUserData.Gender, Mode=TwoWay}"
+                     SelectedValuePath="Content"
                      x:Name="GenderInput"
                      HorizontalAlignment="Stretch">
                         <ComboBoxItem Content="male"/>
@@ -58,6 +63,8 @@
                     <ComboBox 
                      Header="Health Goal" 
                      PlaceholderText="Select health goal"
+                     SelectedValue="{x:Bind ViewModel.CurrentUserData.Goal, Mode=TwoWay}"
+                     SelectedValuePath="Content"
                      x:Name="HealthGoalInput"
                      HorizontalAlignment="Stretch">
                         <ComboBoxItem Content="bulk"/>
@@ -66,10 +73,17 @@
                         <ComboBoxItem Content="well-being"/>
                     </ComboBox>
 
+                    <TextBlock
+                     Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                     Foreground="#FF5A5A"
+                     TextWrapping="Wrap"
+                     HorizontalAlignment="Center" />
+
                     <Button 
                      Content="Save Details" 
                      Style="{StaticResource AccentButtonStyle}" 
                      HorizontalAlignment="Stretch" 
+                     Command="{x:Bind ViewModel.SaveDataCommand}"
                      Margin="0,10,0,0"/>
 
                 </StackPanel>

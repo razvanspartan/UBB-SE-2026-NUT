@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using TeamNut.ModelViews;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
@@ -23,9 +24,11 @@ namespace TeamNut.Views.UserView
     /// </summary>
     public sealed partial class LoginPage : Page
     {
+        public UserViewModel ViewModel => App.MainViewModel;
         public LoginPage()
         {
             InitializeComponent();
+            this.DataContext = ViewModel;
         }
 
         public void ToRegister_Click(object sender, RoutedEventArgs e)
@@ -33,6 +36,13 @@ namespace TeamNut.Views.UserView
             if (this.Frame != null)
             {
                 this.Frame.Navigate(typeof(RegisterPage));
+            }
+        }
+        private void PasswordInput_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is PasswordBox pwBox && ViewModel.CurrentUser != null)
+            {
+                ViewModel.CurrentUser.Password = pwBox.Password;
             }
         }
     }
