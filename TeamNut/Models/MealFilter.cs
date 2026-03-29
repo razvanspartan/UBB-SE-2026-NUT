@@ -1,8 +1,26 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-public class Class1
+namespace TeamNut.Models
 {
-	public Class1()
-	{
-	}
+    
+    public partial class MealFilter : ObservableObject
+    {
+        [ObservableProperty]
+        private bool _isKeto;
+
+        [ObservableProperty]
+        private bool _isVegan;
+
+        [ObservableProperty]
+        private bool _isNutFree;
+
+        [ObservableProperty]
+        private bool _isLactoseFree;
+
+        [ObservableProperty]
+        private bool _isGlutenFree;
+
+        [ObservableProperty]
+        private string _searchTerm = string.Empty;
+    }
 }
