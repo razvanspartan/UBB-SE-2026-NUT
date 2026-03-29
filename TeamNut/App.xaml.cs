@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using TeamNut.ModelViews;
 using TeamNut.Views;
 using TeamNut.Views.UserView;
 using Windows.ApplicationModel;
@@ -29,6 +30,7 @@ namespace TeamNut
     public partial class App : Application
     {
         private Window? _window;
+        public static UserViewModel MainViewModel { get; } = new UserViewModel();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -36,6 +38,10 @@ namespace TeamNut
         /// </summary>
         public App()
         {
+            this.UnhandledException += (sender, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"Unhandled: {e.Exception}");
+            };
             InitializeComponent();
         }
 

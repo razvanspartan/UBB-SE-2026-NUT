@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
+using TeamNut.Services;
 
 namespace TeamNut.ModelViews
 {
@@ -14,15 +15,24 @@ namespace TeamNut.ModelViews
         [ObservableProperty]
         public partial User CurrentUser { get; set; } = new();
         [ObservableProperty]
+        public partial UserData CurrentUserData { get; set; } = new();
+        [ObservableProperty]
         public partial bool IsNutritionistChecked { get; set; }
         [ObservableProperty]
         public partial string StatusMessage { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial DateTimeOffset SelectedDate { get; set; } = DateTimeOffset.Now;
         public event EventHandler RegistrationValid;
+        public event EventHandler LoginSuccess;
+        public event EventHandler SaveDataSuccess;
+        private readonly UserService _userService;
+
         public UserViewModel()
         {
+            _userService = new UserService();
         }
         [RelayCommand]
-        private void OnRegister()
+        private async void OnRegister()
         {
             StatusMessage = string.Empty;
             if (IsNutritionistChecked)
@@ -39,9 +49,56 @@ namespace TeamNut.ModelViews
                 StatusMessage = string.Join(Environment.NewLine, errors);
                 return;
             }
-            //TODO: Check user against database, show error if username already exists
+            if (await _userService.CheckIfUsernameExistsAsync(CurrentUser.Username))
+            {
+                this.StatusMessage = "Username already exists. Please choose another one.";
+                return;
+            }
             if(CurrentUser.Role == "User")
                 RegistrationValid?.Invoke(this, EventArgs.Empty);
+        }
+        [RelayCommand]
+        private async void OnSaveData()
+        {
+            StatusMessage = string.Empty;
+            List<string> errors = CurrentUserData.GetValidationErrors();
+            if (errors.Any())
+            {
+                StatusMessage = string.Join(Environment.NewLine, errors);
+                return;
+            }
+            CurrentUserData.CalculateAge(SelectedDate);
+            var registeredUser = await _userService.RegisterUserAsync(CurrentUser);
+            if (registeredUser == null)
+            {
+                StatusMessage = "Registration failed. Username might already exist.";
+                return;
+            }
+            CurrentUserData.UserId = registeredUser.Id;
+            await _userService.AddUserDataAsync(CurrentUserData);
+
+            SaveDataSuccess?.Invoke(this, EventArgs.Empty);
+        }
+
+        [RelayCommand]
+        private async void OnLogin()
+        {
+            StatusMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(CurrentUser.Username) || string.IsNullOrWhiteSpace(CurrentUser.Password))
+            {
+                StatusMessage = "Username and Password are required.";
+                return;
+            }
+
+            var user = await _userService.LoginAsync(CurrentUser.Username, CurrentUser.Password);
+            if (user != null)
+            {
+                LoginSuccess?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                StatusMessage = "Invalid username or password.";
+            }
         }
     }
 }

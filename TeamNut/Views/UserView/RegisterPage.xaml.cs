@@ -24,7 +24,7 @@ namespace TeamNut.Views.UserView
     /// </summary>
     public sealed partial class RegisterPage : Page
     {
-        public UserViewModel ViewModel { get; } = new();
+        public UserViewModel ViewModel => App.MainViewModel;
         public RegisterPage()
         {
             InitializeComponent();

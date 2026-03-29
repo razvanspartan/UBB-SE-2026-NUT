@@ -23,8 +23,7 @@ namespace TeamNut.Models
         public partial int Height { get; set; }
 
         [ObservableProperty]
-        [Required(ErrorMessage = "Birthdate is required")]
-        public partial DateTime Birthdate { get; set; } = DateTime.Today.AddYears(-20);
+        public partial int Age { get; set; }
 
         [ObservableProperty]
         [Required(ErrorMessage = "Please select a gender")]
@@ -57,11 +56,14 @@ namespace TeamNut.Models
             return GetErrors().Select(e => e.ErrorMessage!).Where(m => m != null).ToList();
         }
 
-        public int CalculateAge()
+        public int CalculateAge(DateTimeOffset? birthDate)
         {
+            if (birthDate == null) return 0;
+
             var today = DateTime.Today;
-            var age = today.Year - Birthdate.Year;
-            if (Birthdate.Date > today.AddYears(-age)) age--;
+            var birth = birthDate.Value.DateTime;
+            var age = today.Year - birth.Year;
+            if (birth.Date > today.AddYears(-age)) age--;
             return age;
         }
     }
