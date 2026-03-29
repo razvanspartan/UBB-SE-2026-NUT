@@ -18,10 +18,7 @@ namespace TeamNut
         {
             _window = new MainWindow();
 
-            Frame rootFrame = new Frame();
-            _window.Content = rootFrame;
-
-            rootFrame.Navigate(typeof(MealsPage)); // 👈 pra testar meals
+            _window.Content = new UserView();
 
             _window.Activate();
         }
