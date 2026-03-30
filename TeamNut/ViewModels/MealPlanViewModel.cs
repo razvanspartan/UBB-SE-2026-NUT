@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Services;
@@ -13,14 +12,16 @@ namespace TeamNut.ModelViews
     public partial class MealPlanViewModel : ObservableObject
     {
         [ObservableProperty]
-        public partial string statusMessage { get; set; } = "Ready to create your plan!";
+        public partial string statusMessage { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial bool isBusy { get; set; }
 
+        private readonly MealPlanService _mealPlanService;
+
         public MealPlanViewModel()
         {
-            // Constructor left empty for now as we don't have specific services yet
+            _mealPlanService = new MealPlanService();
         }
 
         [RelayCommand]
@@ -29,23 +30,19 @@ namespace TeamNut.ModelViews
             StatusMessage = string.Empty;
             IsBusy = true;
 
-            // Simple feedback for the user
-            StatusMessage = "Analyzing pantry items... please wait.";
+            // Calling our new service
+            var result = await _mealPlanService.GenerateNewMealPlanAsync(1);
 
-            try
+            if (result)
             {
-                // Simulate processing time for generation logic
-                await Task.Delay(2000);
-                StatusMessage = "Meal plan generated successfully based on your pantry!";
+                StatusMessage = "Meal plan generated and saved successfully!";
             }
-            catch (Exception ex)
+            else
             {
-                StatusMessage = "An error occurred while generating the plan.";
+                StatusMessage = "Failed to generate meal plan. Please try again.";
             }
-            finally
-            {
-                IsBusy = false;
-            }
+
+            IsBusy = false;
         }
     }
 }
