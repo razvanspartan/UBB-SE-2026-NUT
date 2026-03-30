@@ -8,24 +8,24 @@ namespace TeamNut.Models
     {
         [ObservableProperty]
         [Key]
-        public partial int Id { get; set; }
+        private int _id;
 
         [ObservableProperty]
         [Required]
-        public partial int UserId { get; set; }
+        private int _userId;
 
         [ObservableProperty]
         [Required]
-        public partial string Name { get; set; } = string.Empty;
+        private string _name = string.Empty;
 
         [ObservableProperty]
-        public partial bool HasSound { get; set; } = false;
+        private bool _hasSound = false;
 
         [ObservableProperty]
         [Required]
-        public partial TimeSpan Time { get; set; }
+        private TimeSpan _time;
 
         [ObservableProperty]
-        public partial string Frequency { get; set; } = string.Empty;
+        private string _frequency = string.Empty;
     }
 }

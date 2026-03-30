@@ -1,20 +1,43 @@
-﻿namespace TeamNut.Models
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace TeamNut.Models
 {
-    public class Meal
+    // English: Updated Meal model to include all necessary properties (IsFavorite, ImageUrl, dietary flags)
+    public partial class Meal : ObservableObject
     {
-        public string Name { get; set; }
-        public int Calories { get; set; }
-        public int Carbs { get; set; }
-        public int Fat { get; set; }
+        [ObservableProperty]
+        [Key]
+        private int _id;
 
-        public int Protein { get; set; }
+        [ObservableProperty]
+        private string _name = string.Empty;
 
-        public bool IsVegan { get; set; }
-        public bool IsKeto { get; set; }
-        public bool IsGlutenFree { get; set; }
-        public bool IsLactoseFree { get; set; }
-        public bool IsNutFree { get; set; }
+        [ObservableProperty]
+        private string _imageUrl = string.Empty;
 
-        public bool IsFavorite { get; set; }
+        [ObservableProperty]
+        private double _calories;
+
+        [ObservableProperty]
+        private string _description = string.Empty;
+
+        [ObservableProperty]
+        private bool _isFavorite;
+
+        [ObservableProperty]
+        private bool _isKeto;
+
+        [ObservableProperty]
+        private bool _isVegan;
+
+        [ObservableProperty]
+        private bool _isNutFree;
+
+        [ObservableProperty]
+        private bool _isLactoseFree;
+
+        [ObservableProperty]
+        private bool _isGlutenFree;
     }
 }

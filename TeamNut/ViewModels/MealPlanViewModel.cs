@@ -1,46 +1,60 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Services;
 
 namespace TeamNut.ModelViews
 {
+    // English: ViewModel for Meal Planning, using private fields for source generation
     public partial class MealPlanViewModel : ObservableObject
     {
-        [ObservableProperty]
-        public partial string statusMessage { get; set; } = "Ready to create your plan!";
+        private readonly MealPlanService _mealPlanService;
 
         [ObservableProperty]
-        public partial bool isBusy { get; set; }
+        private string _statusMessage = "Ready to create your plan!";
+
+        [ObservableProperty]
+        private bool _isBusy;
 
         public MealPlanViewModel()
         {
-            // Constructor left empty for now as we don't have specific services yet
+            // Initializing the service to handle data logic
+            _mealPlanService = new MealPlanService();
         }
 
         [RelayCommand]
-        private async void OnGenerateMealPlan()
+        private async Task OnGenerateMealPlan()
         {
-            StatusMessage = string.Empty;
-            IsBusy = true;
+            if (IsBusy) return;
 
-            // Simple feedback for the user
-            StatusMessage = "Analyzing pantry items... please wait.";
+            IsBusy = true;
+            StatusMessage = "Fetching today's plan...";
 
             try
             {
-                // Simulate processing time for generation logic
-                await Task.Delay(2000);
-                StatusMessage = "Meal plan generated successfully based on your pantry!";
+                // English: Attempt to fetch today's plan using the service
+                var todaysPlan = await _mealPlanService.GetTodaysMealPlanAsync(1);
+
+                if (todaysPlan != null)
+                {
+                    StatusMessage = $"Today's plan: {todaysPlan.GoalType}";
+                }
+                else
+                {
+                    StatusMessage = "No plan for today. Generating...";
+                    var success = await _mealPlanService.GenerateNewMealPlanAsync(1);
+
+                    if (success)
+                        StatusMessage = "New plan for today created!";
+                    else
+                        StatusMessage = "Could not generate a new plan.";
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                StatusMessage = "An error occurred while generating the plan.";
+                StatusMessage = "An error occurred while fetching your plan.";
             }
             finally
             {

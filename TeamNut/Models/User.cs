@@ -9,32 +9,28 @@ namespace TeamNut.Models
     {
         [ObservableProperty]
         [Key]
-        public partial int Id { get; set; }
+        private int _id;
 
         [ObservableProperty]
         [Required(ErrorMessage = "Username is mandatory")]
         [StringLength(30, MinimumLength = 3)]
         [RegularExpression(@"^[a-zA-Z0-9]+$", ErrorMessage = "Username must be alphanumeric")]
-        public partial string Username { get; set; } = string.Empty;
+        private string _username = string.Empty;
 
         [ObservableProperty]
         [Required(ErrorMessage = "Password is mandatory")]
         [StringLength(30, MinimumLength = 8)]
-        public partial string Password { get; set; } = string.Empty;
+        private string _password = string.Empty;
 
         [ObservableProperty]
         [Required(ErrorMessage = "Role is mandatory")]
         [RegularExpression(@"^(User|Nutritionist)$", ErrorMessage = "Role must be 'User' or 'Nutritionist'")]
-        public partial string Role { get; set; } = "User";
+        private string _role = "User";
 
         public List<string> ValidateAndReturnErrors()
-        { 
+        {
             ValidateAllProperties();
-
-            return GetErrors()
-                .Select(e => e.ErrorMessage!)
-                .Where(msg => msg != null)
-                .ToList();
+            return GetErrors().Select(e => e.ErrorMessage!).Where(msg => msg != null).ToList();
         }
     }
 }
