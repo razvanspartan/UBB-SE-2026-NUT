@@ -1,103 +1,120 @@
 ﻿using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
-using NutApp.Domain;
+using System.Data;
+using System.Text;
+using System.Threading.Tasks;
+using TeamNut.Repositories;
 
-namespace NutApp.Backend.Repositories
+namespace TeamNut.Repositories
 {
-    public class MealRepository
+    
+    internal class MealRepository : IRepository<Meal>
     {
-        private readonly string _connectionString = "Server=(localdb)\\mssqllocaldb;Database=NutAppDB;Trusted_Connection=True;";
+        private readonly string _connectionString = DbConfig.ConnectionString;
 
+        public async Task<Meal> GetById(int id)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            const string sql = "SELECT * FROM Meals WHERE meal_id = @id";
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", id);
 
-        public List<Meal> GetAllMeals()
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync()) return MapReaderToMeal(reader);
+            return null;
+        }
+
+        public async Task<IEnumerable<Meal>> GetAll()
         {
             var meals = new List<Meal>();
-            using (SqlConnection conn = new SqlConnection(_connectionString))
-            {
-                string sql = "SELECT * FROM Meals";
-                SqlCommand cmd = new SqlCommand(sql, conn);
-                conn.Open();
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read()) meals.Add(MapReaderToMeal(reader));
-                }
-            }
+            using var conn = new SqlConnection(_connectionString);
+            const string sql = "SELECT * FROM Meals";
+            using var cmd = new SqlCommand(sql, conn);
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) meals.Add(MapReaderToMeal(reader));
             return meals;
         }
 
-        public List<Meal> GetMealsByFilter(string filterType)
+       
+        public async Task<IEnumerable<Meal>> GetFilteredMeals(MealFilter filter)
         {
             var meals = new List<Meal>();
-            string columnName = filterType.ToLower() switch
-            {
-                "keto" => "isKeto",
-                "vegan" => "isVegan",
-                "nutfree" => "isNutFree",
-                "lactosefree" => "isLactoseFree",
-                "glutenfree" => "isGlutenFree",
-                _ => null
-            };
+            StringBuilder sql = new StringBuilder("SELECT * FROM Meals WHERE 1=1");
+            var parameters = new List<SqlParameter>();
 
-            if (columnName == null) return GetAllMeals();
+            if (filter.IsKeto) sql.Append(" AND isKeto = 1");
+            if (filter.IsVegan) sql.Append(" AND isVegan = 1");
+            if (filter.IsNutFree) sql.Append(" AND isNutFree = 1");
+            if (filter.IsLactoseFree) sql.Append(" AND isLactoseFree = 1");
+            if (filter.IsGlutenFree) sql.Append(" AND isGlutenFree = 1");
 
-            using (SqlConnection conn = new SqlConnection(_connectionString))
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
             {
-                string sql = $"SELECT * FROM Meals WHERE {columnName} = 1";
-                SqlCommand cmd = new SqlCommand(sql, conn);
-                conn.Open();
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read()) meals.Add(MapReaderToMeal(reader));
-                }
+                sql.Append(" AND name LIKE @search");
+                parameters.Add(new SqlParameter("@search", $"%{filter.SearchTerm}%"));
             }
+
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand(sql.ToString(), conn);
+            cmd.Parameters.AddRange(parameters.ToArray());
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) meals.Add(MapReaderToMeal(reader));
             return meals;
         }
 
-
-        public void AddFavorite(int userId, int mealId)
+        public async Task Add(Meal entity)
         {
-            using (SqlConnection conn = new SqlConnection(_connectionString))
-            {
-                string sql = "INSERT INTO Favorites (userId, mealId) VALUES (@uid, @mid)";
-                SqlCommand cmd = new SqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@uid", userId);
-                cmd.Parameters.AddWithValue("@mid", mealId);
-                conn.Open();
-                cmd.ExecuteNonQuery();
-            }
+            using var conn = new SqlConnection(_connectionString);
+            const string sql = @"INSERT INTO Meals (name, imageUrl, isKeto, isVegan, isNutFree, isLactoseFree, isGlutenFree, description) 
+                                VALUES (@name, @img, @keto, @vegan, @nut, @lac, @glu, @desc)";
+            using var cmd = new SqlCommand(sql, conn);
+            AddMealParameters(cmd, entity);
+
+            await conn.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
         }
 
-        public void RemoveFavorite(int userId, int mealId)
+        public async Task Update(Meal entity)
         {
-            using (SqlConnection conn = new SqlConnection(_connectionString))
-            {
-                string sql = "DELETE FROM Favorites WHERE userId = @uid AND mealId = @mid";
-                SqlCommand cmd = new SqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@uid", userId);
-                cmd.Parameters.AddWithValue("@mid", mealId);
-                conn.Open();
-                cmd.ExecuteNonQuery();
-            }
+            using var conn = new SqlConnection(_connectionString);
+            const string sql = @"UPDATE Meals SET name=@name, imageUrl=@img, isKeto=@keto, isVegan=@vegan, 
+                                 isNutFree=@nut, isLactoseFree=@lac, isGlutenFree=@glu, description=@desc 
+                                 WHERE meal_id=@id";
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", entity.Id);
+            AddMealParameters(cmd, entity);
+
+            await conn.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
         }
 
-        public List<Meal> GetUserFavorites(int userId)
+        public async Task Delete(int id)
         {
-            var favorites = new List<Meal>();
-            using (SqlConnection conn = new SqlConnection(_connectionString))
-            {
-                string sql = @"SELECT m.* FROM Meals m 
-                               INNER JOIN Favorites f ON m.meal_id = f.mealId 
-                               WHERE f.userId = @uid";
-                SqlCommand cmd = new SqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@uid", userId);
-                conn.Open();
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read()) favorites.Add(MapReaderToMeal(reader));
-                }
-            }
-            return favorites;
+            using var conn = new SqlConnection(_connectionString);
+            const string sql = "DELETE FROM Meals WHERE meal_id = @id";
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            await conn.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private void AddMealParameters(SqlCommand cmd, Meal meal)
+        {
+            cmd.Parameters.AddWithValue("@name", meal.Name);
+            cmd.Parameters.AddWithValue("@img", meal.ImageUrl ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@keto", meal.IsKeto);
+            cmd.Parameters.AddWithValue("@vegan", meal.IsVegan);
+            cmd.Parameters.AddWithValue("@nut", meal.IsNutFree);
+            cmd.Parameters.AddWithValue("@lac", meal.IsLactoseFree);
+            cmd.Parameters.AddWithValue("@glu", meal.IsGlutenFree);
+            cmd.Parameters.AddWithValue("@desc", meal.Description ?? (object)DBNull.Value);
         }
 
         private Meal MapReaderToMeal(SqlDataReader reader)
@@ -106,13 +123,13 @@ namespace NutApp.Backend.Repositories
             {
                 Id = Convert.ToInt32(reader["meal_id"]),
                 Name = reader["name"].ToString(),
-                Description = reader["description"]?.ToString(),
                 ImageUrl = reader["imageUrl"]?.ToString(),
                 IsKeto = Convert.ToBoolean(reader["isKeto"]),
                 IsVegan = Convert.ToBoolean(reader["isVegan"]),
                 IsNutFree = Convert.ToBoolean(reader["isNutFree"]),
                 IsLactoseFree = Convert.ToBoolean(reader["isLactoseFree"]),
-                IsGlutenFree = Convert.ToBoolean(reader["isGlutenFree"])
+                IsGlutenFree = Convert.ToBoolean(reader["isGlutenFree"]),
+                Description = reader["description"]?.ToString()
             };
         }
     }
