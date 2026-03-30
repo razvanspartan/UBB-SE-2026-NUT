@@ -13,10 +13,10 @@ namespace TeamNut.ModelViews
     public partial class MealPlanViewModel : ObservableObject
     {
         [ObservableProperty]
-        public partial string statusMessage { get; set; } = "Ready to create your plan!";
+        public partial string StatusMessage { get; set; }
 
         [ObservableProperty]
-        public partial bool isBusy { get; set; }
+        public partial bool IsBusy { get; set; }
 
         public MealPlanViewModel()
         {
@@ -24,7 +24,7 @@ namespace TeamNut.ModelViews
         }
 
         [RelayCommand]
-        private async void OnGenerateMealPlan()
+        private async void onGenerateMealPlan()
         {
             StatusMessage = string.Empty;
             IsBusy = true;
@@ -35,7 +35,7 @@ namespace TeamNut.ModelViews
             try
             {
                 // Simulate processing time for generation logic
-                await Task.Delay(2000);
+
                 StatusMessage = "Meal plan generated successfully based on your pantry!";
             }
             catch (Exception ex)

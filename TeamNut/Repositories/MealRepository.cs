@@ -5,6 +5,7 @@ using System.Data;
 using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Repositories;
+using TeamNut.Models;
 
 namespace TeamNut.Repositories
 {
@@ -65,35 +66,6 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             const string sql = "SELECT * FROM Meals";
             using var cmd = new SqlCommand(sql, conn);
-
-            await conn.OpenAsync();
-            using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync()) meals.Add(MapReaderToMeal(reader));
-            return meals;
-        }
-
-       
-        public async Task<IEnumerable<Meal>> GetFilteredMeals(MealFilter filter)
-        {
-            var meals = new List<Meal>();
-            StringBuilder sql = new StringBuilder("SELECT * FROM Meals WHERE 1=1");
-            var parameters = new List<SqlParameter>();
-
-            if (filter.IsKeto) sql.Append(" AND isKeto = 1");
-            if (filter.IsVegan) sql.Append(" AND isVegan = 1");
-            if (filter.IsNutFree) sql.Append(" AND isNutFree = 1");
-            if (filter.IsLactoseFree) sql.Append(" AND isLactoseFree = 1");
-            if (filter.IsGlutenFree) sql.Append(" AND isGlutenFree = 1");
-
-            if (!string.IsNullOrEmpty(filter.SearchTerm))
-            {
-                sql.Append(" AND name LIKE @search");
-                parameters.Add(new SqlParameter("@search", $"%{filter.SearchTerm}%"));
-            }
-
-            using var conn = new SqlConnection(_connectionString);
-            using var cmd = new SqlCommand(sql.ToString(), conn);
-            cmd.Parameters.AddRange(parameters.ToArray());
 
             await conn.OpenAsync();
             using var reader = await cmd.ExecuteReaderAsync();
