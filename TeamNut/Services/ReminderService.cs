@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using TeamNut.Domain;
 using TeamNut.Repositories;
 
-namespace TeamNut.Backend.Services
+namespace TeamNut.Services
 {
     public class ReminderService
     {
