@@ -75,7 +75,113 @@ namespace TeamNut.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
-        
+        public async Task<int> GenerateDefaultDailyMealPlan(int userId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+            using var transaction = conn.BeginTransaction();
+
+            try
+            {
+                const string insertPlanSql = @"INSERT INTO MealPlan (user_id, created_at, goal_type) 
+                                               OUTPUT INSERTED.mealplan_id
+                                               VALUES (@uid, @created, @goal)";
+                using var planCmd = new SqlCommand(insertPlanSql, conn, transaction);
+                planCmd.Parameters.AddWithValue("@uid", userId);
+                planCmd.Parameters.AddWithValue("@created", DateTime.Now);
+                planCmd.Parameters.AddWithValue("@goal", "general");
+
+                int mealPlanId = (int)await planCmd.ExecuteScalarAsync();
+
+                const string getMealsSql = @"
+                    SELECT TOP 1 meal_id FROM Meals ORDER BY NEWID();
+                    SELECT TOP 1 meal_id FROM Meals ORDER BY NEWID();
+                    SELECT TOP 1 meal_id FROM Meals ORDER BY NEWID();";
+
+                var mealIds = new List<int>();
+                var mealTypes = new[] { "breakfast", "lunch", "dinner" };
+
+                using var mealsCmd = new SqlCommand(getMealsSql, conn, transaction);
+                using var reader = await mealsCmd.ExecuteReaderAsync();
+
+                int index = 0;
+                do
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        mealIds.Add(Convert.ToInt32(reader["meal_id"]));
+                    }
+                    index++;
+                } while (await reader.NextResultAsync());
+
+                reader.Close();
+
+                const string insertMealPlanMealSql = @"INSERT INTO MealPlanMeal (mealPlanId, mealId, mealType, assigned_at, isConsumed) 
+                                                       VALUES (@planId, @mealId, @mealType, @assignedAt, 0)";
+
+                for (int i = 0; i < mealIds.Count && i < mealTypes.Length; i++)
+                {
+                    using var mealPlanMealCmd = new SqlCommand(insertMealPlanMealSql, conn, transaction);
+                    mealPlanMealCmd.Parameters.AddWithValue("@planId", mealPlanId);
+                    mealPlanMealCmd.Parameters.AddWithValue("@mealId", mealIds[i]);
+                    mealPlanMealCmd.Parameters.AddWithValue("@mealType", mealTypes[i]);
+                    mealPlanMealCmd.Parameters.AddWithValue("@assignedAt", DateTime.Now);
+                    await mealPlanMealCmd.ExecuteNonQueryAsync();
+                }
+
+                transaction.Commit();
+                return mealPlanId;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        public async Task<List<Meal>> GetMealsForMealPlan(int mealPlanId)
+        {
+            var meals = new List<Meal>();
+            using var conn = new SqlConnection(_connectionString);
+
+            const string sql = @"SELECT m.*, mpm.mealType, mpm.isConsumed 
+                                FROM Meals m
+                                INNER JOIN MealPlanMeal mpm ON m.meal_id = mpm.mealId
+                                WHERE mpm.mealPlanId = @planId
+                                ORDER BY 
+                                    CASE mpm.mealType 
+                                        WHEN 'breakfast' THEN 1 
+                                        WHEN 'lunch' THEN 2 
+                                        WHEN 'dinner' THEN 3 
+                                        ELSE 4 
+                                    END";
+
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@planId", mealPlanId);
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                meals.Add(new Meal
+                {
+                    Id = Convert.ToInt32(reader["meal_id"]),
+                    Name = reader["name"].ToString(),
+                    ImageUrl = reader["imageUrl"]?.ToString(),
+                    IsKeto = Convert.ToBoolean(reader["isKeto"]),
+                    IsVegan = Convert.ToBoolean(reader["isVegan"]),
+                    IsNutFree = Convert.ToBoolean(reader["isNutFree"]),
+                    IsLactoseFree = Convert.ToBoolean(reader["isLactoseFree"]),
+                    IsGlutenFree = Convert.ToBoolean(reader["isGlutenFree"]),
+                    Description = reader["description"]?.ToString()
+                });
+            }
+
+            return meals;
+        }
+
+
         private MealPlan MapReaderToMealPlan(SqlDataReader reader)
         {
             return new MealPlan

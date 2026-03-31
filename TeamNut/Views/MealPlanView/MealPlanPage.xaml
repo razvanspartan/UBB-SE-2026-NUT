@@ -21,7 +21,7 @@
                     Content="Generate Plan from Pantry" 
                     Style="{StaticResource AccentButtonStyle}" 
                     HorizontalAlignment="Stretch"
-                    Command="{x:Bind ViewModel.onGenerateMealPlanCommand}"
+                    Command="{x:Bind ViewModel.GenerateMealPlanCommand}"
                     IsEnabled="{x:Bind ViewModel.IsBusy, Mode=OneWay, Converter={StaticResource InverseBoolConverter}, FallbackValue=True}"/>
 
                 <TextBlock 
