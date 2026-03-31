@@ -17,7 +17,7 @@ namespace TeamNut.ModelViews
         private readonly MealPlanRepository _mealPlanRepository;
 
         [ObservableProperty]
-        public partial string StatusMessage { get; set; }
+        public partial string StatusMessage { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial bool IsBusy { get; set; }

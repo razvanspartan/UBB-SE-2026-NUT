@@ -31,6 +31,7 @@ namespace TeamNut.ViewModels
         {
             _userService = new UserService();
         }
+
         [RelayCommand]
         private async void OnRegister()
         {
@@ -40,7 +41,7 @@ namespace TeamNut.ViewModels
                 CurrentUser.Role = "Nutritionist";
             }
             else
-                {
+            {
                 CurrentUser.Role = "User";
             }
             List<String> errors = CurrentUser.ValidateAndReturnErrors();
@@ -54,18 +55,20 @@ namespace TeamNut.ViewModels
                 this.StatusMessage = "Username already exists. Please choose another one.";
                 return;
             }
-            if(CurrentUser.Role == "User")
+            if (CurrentUser.Role == "User")
                 RegistrationValid?.Invoke(this, EventArgs.Empty);
             else
             {
                 var registeredUser = await _userService.RegisterUserAsync(CurrentUser);
                 if (registeredUser != null)
                 {
-                    UserSession.Login(registeredUser.Username, registeredUser.Role);
+                    // Fixed to include the Id as required by the updated UserSession
+                    UserSession.Login(registeredUser.Id, registeredUser.Username, registeredUser.Role);
                     LoginSuccess?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
+
         [RelayCommand]
         private async void OnSaveData()
         {
@@ -86,7 +89,8 @@ namespace TeamNut.ViewModels
             CurrentUserData.UserId = registeredUser.Id;
             await _userService.AddUserDataAsync(CurrentUserData);
 
-            UserSession.Login(registeredUser.Username, registeredUser.Role);
+            // Fixed to include the Id as required by the updated UserSession
+            UserSession.Login(registeredUser.Id, registeredUser.Username, registeredUser.Role);
             SaveDataSuccess?.Invoke(this, EventArgs.Empty);
         }
 
@@ -103,7 +107,8 @@ namespace TeamNut.ViewModels
             var user = await _userService.LoginAsync(CurrentUser.Username, CurrentUser.Password);
             if (user != null)
             {
-                UserSession.Login(user.Username, user.Role);
+                // Fixed to include the Id as required by the updated UserSession
+                UserSession.Login(user.Id, user.Username, user.Role);
                 LoginSuccess?.Invoke(this, EventArgs.Empty);
             }
             else
