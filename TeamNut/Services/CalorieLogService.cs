@@ -31,7 +31,7 @@ namespace TeamNut.Services
             var userId = GetUserId();
             var today = GetToday();
 
-            var logs = await _repository.GetByUserAndDateRange(userId, today, today);
+            var logs = await _repository.GetByUserAndDateRange(userId, today, today.AddDays(1));
 
             if (logs == null || logs.Count == 0)
                 return new CalorieLog
