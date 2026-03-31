@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml.Controls;
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using TeamNut.ViewModels;
 
 namespace TeamNut.Views.CalorieLoggingView

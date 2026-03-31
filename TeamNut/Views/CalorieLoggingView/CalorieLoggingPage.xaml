@@ -3,32 +3,62 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-	<Grid Padding="10">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*" />
-			<ColumnDefinition Width="*" />
-		</Grid.ColumnDefinitions>
+    <Grid Padding="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-		<!-- LEFT -->
-		<StackPanel Grid.Column="0" Spacing="8">
-			<TextBlock Text="Daily" FontSize="18"/>
+        <!-- LEFT -->
+        <StackPanel Grid.Column="0" Spacing="8">
+            <TextBlock Text="Daily" FontSize="18"/>
 
-			<TextBlock Text="{Binding StatusMessage}" />
+            <TextBlock Text="{Binding StatusMessage}" />
 
-			<TextBlock Text="{Binding DailyLog.CaloriesConsumed, StringFormat='Calories: {0}'}"/>
-			<TextBlock Text="{Binding DailyLog.Protein, StringFormat='Protein: {0}'}"/>
-			<TextBlock Text="{Binding DailyLog.Carbs, StringFormat='Carbs: {0}'}"/>
-			<TextBlock Text="{Binding DailyLog.Fats, StringFormat='Fats: {0}'}"/>
-		</StackPanel>
+            <TextBlock>
+                <Run Text="Calories: "/>
+                <Run Text="{Binding DailyLog.CaloriesConsumed}"/>
+            </TextBlock>
 
-		<!-- RIGHT -->
-		<StackPanel Grid.Column="1" Spacing="8">
-			<TextBlock Text="This Week" FontSize="18"/>
+            <TextBlock>
+                <Run Text="Protein: "/>
+                <Run Text="{Binding DailyLog.Protein}"/>
+            </TextBlock>
 
-			<TextBlock Text="{Binding WeeklyLog.CaloriesConsumed, StringFormat='Calories: {0}'}"/>
-			<TextBlock Text="{Binding WeeklyLog.Protein, StringFormat='Protein: {0}'}"/>
-			<TextBlock Text="{Binding WeeklyLog.Carbs, StringFormat='Carbs: {0}'}"/>
-			<TextBlock Text="{Binding WeeklyLog.Fats, StringFormat='Fats: {0}'}"/>
-		</StackPanel>
-	</Grid>
+            <TextBlock>
+                <Run Text="Carbs: "/>
+                <Run Text="{Binding DailyLog.Carbs}"/>
+            </TextBlock>
+
+            <TextBlock>
+                <Run Text="Fats: "/>
+                <Run Text="{Binding DailyLog.Fats}"/>
+            </TextBlock>
+        </StackPanel>
+
+        <!-- RIGHT -->
+        <StackPanel Grid.Column="1" Spacing="8">
+            <TextBlock Text="This Week" FontSize="18"/>
+
+            <TextBlock>
+                <Run Text="Calories: "/>
+                <Run Text="{Binding WeeklyLog.CaloriesConsumed}"/>
+            </TextBlock>
+
+            <TextBlock>
+                <Run Text="Protein: "/>
+                <Run Text="{Binding WeeklyLog.Protein}"/>
+            </TextBlock>
+
+            <TextBlock>
+                <Run Text="Carbs: "/>
+                <Run Text="{Binding WeeklyLog.Carbs}"/>
+            </TextBlock>
+
+            <TextBlock>
+                <Run Text="Fats: "/>
+                <Run Text="{Binding WeeklyLog.Fats}"/>
+            </TextBlock>
+        </StackPanel>
+    </Grid>
 </Page>
