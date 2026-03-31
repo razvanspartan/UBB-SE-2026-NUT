@@ -1,17 +1,17 @@
 ﻿using System;
+using System.Threading.Tasks;
 using TeamNut.Models;
 
-public interface ICalorieLogService
+namespace TeamNut.Services
 {
-    // ✅ Get log for a specific day
-    CalorieLog GetDailyLog(int userId, DateTime date);
+    public interface ICalorieLogService
+    {
+        Task<CalorieLog> GetDailyLog(int userId, DateTime date);
 
-    // ✅ Save or update a daily log
-    void SaveDailyLog(CalorieLog log);
+        Task SaveDailyLog(CalorieLog log);
 
-    // ✅ Get totals for the current week
-    CalorieLog GetWeeklyTotals(int userId, DateTime date);
+        Task<CalorieLog> GetWeeklyTotals(int userId, DateTime date);
 
-    // ✅ Check if at least one day passed since meal plan
-    bool HasDayPassed(DateTime mealPlanDate);
+        bool HasDayPassed(DateTime mealPlanDate);
+    }
 }

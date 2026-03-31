@@ -1,129 +1,174 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.SqlClient;
+using System.Threading.Tasks;
 using TeamNut.Models;
-using TeamNut.Repositories;
 
-public class CalorieLogRepository
+namespace TeamNut.Repositories
 {
-    private readonly DbConfig _db;
-
-    public CalorieLogRepository()
+    public class CalorieLogRepository : IRepository<CalorieLog>
     {
-        _db = new DbConfig();
-    }
-
-    // ✅ Get log for a specific day
-    public CalorieLog GetDailyLog(int userId, DateTime date)
-    {
-        using var conn = _db.GetConnection();
-        conn.Open();
-
-        string query = @"SELECT * FROM CalorieLogs 
-                         WHERE UserId = @userId AND Date = @date";
-
-        using var cmd = new SQLiteCommand(query, conn);
-        cmd.Parameters.AddWithValue("@userId", userId);
-        cmd.Parameters.AddWithValue("@date", date.Date);
-
-        using var reader = cmd.ExecuteReader();
-
-        if (reader.Read())
+        public async Task Add(CalorieLog log)
         {
-            return MapReaderToLog(reader);
+            using var conn = new SqlConnection(DbConfig.ConnectionString);
+            await conn.OpenAsync();
+
+            string query = @"INSERT INTO CalorieLogs 
+                (UserId, Date, CaloriesConsumed, CaloriesBurnt, Protein, Carbs, Fats)
+                VALUES (@userId, @date, @caloriesConsumed, @caloriesBurnt, @protein, @carbs, @fats)";
+
+            using var cmd = new SqlCommand(query, conn);
+            AddParameters(cmd, log);
+
+            await cmd.ExecuteNonQueryAsync();
         }
 
-        return null;
-    }
-
-    // ✅ Insert new log
-    public void Insert(CalorieLog log)
-    {
-        using var conn = _db.GetConnection();
-        conn.Open();
-
-        string query = @"INSERT INTO CalorieLogs 
-                        (UserId, Date, CaloriesConsumed, CaloriesBurnt, Protein, Carbs, Fats)
-                        VALUES (@userId, @date, @caloriesConsumed, @caloriesBurnt, @protein, @carbs, @fats)";
-
-        using var cmd = new SQLiteCommand(query, conn);
-        AddParameters(cmd, log);
-
-        cmd.ExecuteNonQuery();
-    }
-
-    // ✅ Update existing log
-    public void Update(CalorieLog log)
-    {
-        using var conn = _db.GetConnection();
-        conn.Open();
-
-        string query = @"UPDATE CalorieLogs 
-                         SET CaloriesConsumed = @caloriesConsumed,
-                             CaloriesBurnt = @caloriesBurnt,
-                             Protein = @protein,
-                             Carbs = @carbs,
-                             Fats = @fats
-                         WHERE UserId = @userId AND Date = @date";
-
-        using var cmd = new SQLiteCommand(query, conn);
-        AddParameters(cmd, log);
-
-        cmd.ExecuteNonQuery();
-    }
-
-    // ✅ Get logs in date range (for weekly totals)
-    public List<CalorieLog> GetLogsInRange(int userId, DateTime start, DateTime end)
-    {
-        var logs = new List<CalorieLog>();
-
-        using var conn = _db.GetConnection();
-        conn.Open();
-
-        string query = @"SELECT * FROM CalorieLogs 
-                         WHERE UserId = @userId 
-                         AND Date >= @start 
-                         AND Date <= @end";
-
-        using var cmd = new SQLiteCommand(query, conn);
-        cmd.Parameters.AddWithValue("@userId", userId);
-        cmd.Parameters.AddWithValue("@start", start.Date);
-        cmd.Parameters.AddWithValue("@end", end.Date);
-
-        using var reader = cmd.ExecuteReader();
-
-        while (reader.Read())
+        public async Task<IEnumerable<CalorieLog>> GetAll()
         {
-            logs.Add(MapReaderToLog(reader));
+            var logs = new List<CalorieLog>();
+
+            using var conn = new SqlConnection(DbConfig.ConnectionString);
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM CalorieLogs";
+
+            using var cmd = new SqlCommand(query, conn);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                logs.Add(MapReaderToLog(reader));
+            }
+
+            return logs;
         }
 
-        return logs;
-    }
-
-    // 🔧 Helper: Map DB row → object
-    private CalorieLog MapReaderToLog(SQLiteDataReader reader)
-    {
-        return new CalorieLog
+        public async Task<CalorieLog> GetById(int id)
         {
-            UserId = Convert.ToInt32(reader["UserId"]),
-            Date = Convert.ToDateTime(reader["Date"]),
-            CaloriesConsumed = Convert.ToDouble(reader["CaloriesConsumed"]),
-            CaloriesBurnt = Convert.ToDouble(reader["CaloriesBurnt"]),
-            Protein = Convert.ToDouble(reader["Protein"]),
-            Carbs = Convert.ToDouble(reader["Carbs"]),
-            Fats = Convert.ToDouble(reader["Fats"])
-        };
-    }
+            using var conn = new SqlConnection(DbConfig.ConnectionString);
+            await conn.OpenAsync();
 
-    // 🔧 Helper: Add parameters to command
-    private void AddParameters(SQLiteCommand cmd, CalorieLog log)
-    {
-        cmd.Parameters.AddWithValue("@userId", log.UserId);
-        cmd.Parameters.AddWithValue("@date", log.Date.Date);
-        cmd.Parameters.AddWithValue("@caloriesConsumed", log.CaloriesConsumed);
-        cmd.Parameters.AddWithValue("@caloriesBurnt", log.CaloriesBurnt);
-        cmd.Parameters.AddWithValue("@protein", log.Protein);
-        cmd.Parameters.AddWithValue("@carbs", log.Carbs);
-        cmd.Parameters.AddWithValue("@fats", log.Fats);
+            string query = "SELECT * FROM CalorieLogs WHERE Id = @id";
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return MapReaderToLog(reader);
+            }
+
+            return null;
+        }
+
+        public async Task Update(CalorieLog log)
+        {
+            using var conn = new SqlConnection(DbConfig.ConnectionString);
+            await conn.OpenAsync();
+
+            string query = @"UPDATE CalorieLogs 
+                SET CaloriesConsumed = @caloriesConsumed,
+                    CaloriesBurnt = @caloriesBurnt,
+                    Protein = @protein,
+                    Carbs = @carbs,
+                    Fats = @fats
+                WHERE Id = @id";
+
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@id", log.Id);
+            AddParameters(cmd, log);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task Delete(int id)
+        {
+            using var conn = new SqlConnection(DbConfig.ConnectionString);
+            await conn.OpenAsync();
+
+            string query = "DELETE FROM CalorieLogs WHERE Id = @id";
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task<CalorieLog> GetByUserAndDate(int userId, DateTime date)
+        {
+            using var conn = new SqlConnection(DbConfig.ConnectionString);
+            await conn.OpenAsync();
+
+            string query = @"SELECT * FROM CalorieLogs 
+                             WHERE UserId = @userId AND CAST(Date AS DATE) = @date";
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@date", date.Date);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return MapReaderToLog(reader);
+            }
+
+            return null;
+        }
+
+        public async Task<List<CalorieLog>> GetByUserAndDateRange(int userId, DateTime start, DateTime end)
+        {
+            var logs = new List<CalorieLog>();
+
+            using var conn = new SqlConnection(DbConfig.ConnectionString);
+            await conn.OpenAsync();
+
+            string query = @"SELECT * FROM CalorieLogs 
+                             WHERE UserId = @userId 
+                             AND Date >= @start AND Date <= @end";
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@start", start.Date);
+            cmd.Parameters.AddWithValue("@end", end.Date);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                logs.Add(MapReaderToLog(reader));
+            }
+
+            return logs;
+        }
+
+        private CalorieLog MapReaderToLog(SqlDataReader reader)
+        {
+            return new CalorieLog
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                UserId = Convert.ToInt32(reader["UserId"]),
+                Date = Convert.ToDateTime(reader["Date"]),
+                CaloriesConsumed = Convert.ToDouble(reader["CaloriesConsumed"]),
+                CaloriesBurnt = Convert.ToDouble(reader["CaloriesBurnt"]),
+                Protein = Convert.ToDouble(reader["Protein"]),
+                Carbs = Convert.ToDouble(reader["Carbs"]),
+                Fats = Convert.ToDouble(reader["Fats"])
+            };
+        }
+
+        private void AddParameters(SqlCommand cmd, CalorieLog log)
+        {
+            cmd.Parameters.AddWithValue("@userId", log.UserId);
+            cmd.Parameters.AddWithValue("@date", log.Date);
+            cmd.Parameters.AddWithValue("@caloriesConsumed", log.CaloriesConsumed);
+            cmd.Parameters.AddWithValue("@caloriesBurnt", log.CaloriesBurnt);
+            cmd.Parameters.AddWithValue("@protein", log.Protein);
+            cmd.Parameters.AddWithValue("@carbs", log.Carbs);
+            cmd.Parameters.AddWithValue("@fats", log.Fats);
+        }
     }
 }
