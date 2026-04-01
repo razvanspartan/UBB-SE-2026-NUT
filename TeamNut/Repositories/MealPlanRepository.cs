@@ -379,6 +379,7 @@ namespace TeamNut.Repositories
 
             const string sql = @"
                 SELECT 
+                    mi.food_id,
                     i.name,
                     mi.quantity,
                     i.calories_per_100g,
@@ -398,6 +399,7 @@ namespace TeamNut.Repositories
 
             while (await reader.ReadAsync())
             {
+                int ingredientId = Convert.ToInt32(reader["food_id"]);
                 double quantity = Convert.ToDouble(reader["quantity"]);
                 double caloriesPer100g = Convert.ToDouble(reader["calories_per_100g"]);
                 double proteinPer100g = Convert.ToDouble(reader["protein_per_100g"]);
@@ -406,6 +408,7 @@ namespace TeamNut.Repositories
 
                 ingredients.Add(new Views.MealPlanView.IngredientViewModel
                 {
+                    IngredientId = ingredientId,
                     Name = reader["name"].ToString(),
                     Quantity = quantity,
                     Calories = Math.Round(caloriesPer100g * quantity / 100, 1),
