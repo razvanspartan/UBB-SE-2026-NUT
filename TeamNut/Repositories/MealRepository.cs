@@ -31,15 +31,18 @@ namespace TeamNut.Repositories
 
         public async Task<IEnumerable<Meal>> GetFilteredMeals(MealFilter filter)
         {
+            var userId = UserSession.UserId ?? 0;
             var meals = new List<Meal>();
             StringBuilder sql = new StringBuilder(@"
                 SELECT 
                     m.*,
+                    MAX(CASE WHEN f.id IS NULL THEN 0 ELSE 1 END) AS isFavorite,
                     CAST(ISNULL(SUM(i.calories_per_100g * mi.quantity / 100.0), 0) AS INT) AS calories,
                     CAST(ISNULL(SUM(i.protein_per_100g * mi.quantity / 100.0), 0) AS INT) AS protein,
                     CAST(ISNULL(SUM(i.carbs_per_100g * mi.quantity / 100.0), 0) AS INT) AS carbs,
                     CAST(ISNULL(SUM(i.fat_per_100g * mi.quantity / 100.0), 0) AS INT) AS fat
                 FROM Meals m
+                LEFT JOIN Favorites f ON f.mealId = m.meal_id AND f.userId = @userId
                 LEFT JOIN MealsIngredients mi ON m.meal_id = mi.meal_id
                 LEFT JOIN Ingredients i ON mi.food_id = i.food_id
                 WHERE 1=1");
@@ -64,6 +67,7 @@ namespace TeamNut.Repositories
 
             using var conn = new SqlConnection(_connectionString);
             using var cmd = new SqlCommand(sql.ToString(), conn);
+            cmd.Parameters.AddWithValue("@userId", userId);
             cmd.Parameters.AddRange(parameters.ToArray());
 
             await conn.OpenAsync();
@@ -77,21 +81,25 @@ namespace TeamNut.Repositories
 
         public async Task<Meal> GetById(int id)
         {
+            var userId = UserSession.UserId ?? 0;
             using var conn = new SqlConnection(_connectionString);
             const string sql = @"
                 SELECT 
                     m.*,
+                    MAX(CASE WHEN f.id IS NULL THEN 0 ELSE 1 END) AS isFavorite,
                     CAST(ISNULL(SUM(i.calories_per_100g * mi.quantity / 100.0), 0) AS INT) AS calories,
                     CAST(ISNULL(SUM(i.protein_per_100g * mi.quantity / 100.0), 0) AS INT) AS protein,
                     CAST(ISNULL(SUM(i.carbs_per_100g * mi.quantity / 100.0), 0) AS INT) AS carbs,
                     CAST(ISNULL(SUM(i.fat_per_100g * mi.quantity / 100.0), 0) AS INT) AS fat
                 FROM Meals m
+                LEFT JOIN Favorites f ON f.mealId = m.meal_id AND f.userId = @userId
                 LEFT JOIN MealsIngredients mi ON m.meal_id = mi.meal_id
                 LEFT JOIN Ingredients i ON mi.food_id = i.food_id
                 WHERE m.meal_id = @id
                 GROUP BY m.meal_id, m.imageUrl, m.name, m.isKeto, m.isLactoseFree, m.isNutFree, m.isVegan, m.isGlutenFree, m.description";
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@userId", userId);
 
             await conn.OpenAsync();
             using var reader = await cmd.ExecuteReaderAsync();
@@ -101,20 +109,24 @@ namespace TeamNut.Repositories
 
         public async Task<IEnumerable<Meal>> GetAll()
         {
+            var userId = UserSession.UserId ?? 0;
             var meals = new List<Meal>();
             using var conn = new SqlConnection(_connectionString);
             const string sql = @"
                 SELECT 
                     m.*,
+                    MAX(CASE WHEN f.id IS NULL THEN 0 ELSE 1 END) AS isFavorite,
                     CAST(ISNULL(SUM(i.calories_per_100g * mi.quantity / 100.0), 0) AS INT) AS calories,
                     CAST(ISNULL(SUM(i.protein_per_100g * mi.quantity / 100.0), 0) AS INT) AS protein,
                     CAST(ISNULL(SUM(i.carbs_per_100g * mi.quantity / 100.0), 0) AS INT) AS carbs,
                     CAST(ISNULL(SUM(i.fat_per_100g * mi.quantity / 100.0), 0) AS INT) AS fat
                 FROM Meals m
+                LEFT JOIN Favorites f ON f.mealId = m.meal_id AND f.userId = @userId
                 LEFT JOIN MealsIngredients mi ON m.meal_id = mi.meal_id
                 LEFT JOIN Ingredients i ON mi.food_id = i.food_id
                 GROUP BY m.meal_id, m.imageUrl, m.name, m.isKeto, m.isLactoseFree, m.isNutFree, m.isVegan, m.isGlutenFree, m.description";
             using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@userId", userId);
 
             await conn.OpenAsync();
             using var reader = await cmd.ExecuteReaderAsync();
@@ -132,6 +144,30 @@ namespace TeamNut.Repositories
 
             await conn.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task SetFavoriteAsync(int userId, int mealId, bool isFavorite)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            if (isFavorite)
+            {
+                const string insertSql = @"IF NOT EXISTS (SELECT 1 FROM Favorites WHERE userId = @userId AND mealId = @mealId)
+                                           INSERT INTO Favorites (userId, mealId) VALUES (@userId, @mealId)";
+                using var insertCmd = new SqlCommand(insertSql, conn);
+                insertCmd.Parameters.AddWithValue("@userId", userId);
+                insertCmd.Parameters.AddWithValue("@mealId", mealId);
+                await insertCmd.ExecuteNonQueryAsync();
+            }
+            else
+            {
+                const string deleteSql = "DELETE FROM Favorites WHERE userId = @userId AND mealId = @mealId";
+                using var deleteCmd = new SqlCommand(deleteSql, conn);
+                deleteCmd.Parameters.AddWithValue("@userId", userId);
+                deleteCmd.Parameters.AddWithValue("@mealId", mealId);
+                await deleteCmd.ExecuteNonQueryAsync();
+            }
         }
 
         public async Task Update(Meal entity)
@@ -187,6 +223,7 @@ namespace TeamNut.Repositories
                 IsNutFree = Convert.ToBoolean(reader["isNutFree"]),
                 IsLactoseFree = Convert.ToBoolean(reader["isLactoseFree"]),
                 IsGlutenFree = Convert.ToBoolean(reader["isGlutenFree"]),
+                IsFavorite = Convert.ToBoolean(reader["isFavorite"]),
                 Description = reader["description"]?.ToString()
             };
         }

@@ -42,5 +42,15 @@ namespace TeamNut.Services
             var list = await _mealRepository.GetAll();
             return list.ToList();
         }
+
+        public async Task ToggleFavoriteAsync(Meal meal)
+        {
+            if (meal == null || !UserSession.UserId.HasValue)
+            {
+                return;
+            }
+
+            await _mealRepository.SetFavoriteAsync(UserSession.UserId.Value, meal.Id, meal.IsFavorite);
+        }
     }
 }

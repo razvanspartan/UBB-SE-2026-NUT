@@ -186,6 +186,30 @@ namespace TeamNut.Repositories
                         AND total_fat BETWEEN @minFat AND @maxFat
                     ORDER BY NEWID()";
 
+                const string getEligibleFavoriteMealsSql = @"
+                    SELECT DISTINCT f.mealId
+                    FROM Favorites f
+                    WHERE f.userId = @userId
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM MealPlan mp
+                          INNER JOIN MealPlanMeal mpm ON mp.mealplan_id = mpm.mealPlanId
+                          WHERE mp.user_id = @userId
+                            AND mpm.mealId = f.mealId
+                            AND mp.created_at >= DATEADD(DAY, -3, CAST(GETDATE() AS DATE))
+                      )";
+
+                var eligibleFavoriteMealIds = new HashSet<int>();
+                using (var favoritesCmd = new SqlCommand(getEligibleFavoriteMealsSql, conn, transaction))
+                {
+                    favoritesCmd.Parameters.AddWithValue("@userId", userId);
+                    using var favoritesReader = await favoritesCmd.ExecuteReaderAsync();
+                    while (await favoritesReader.ReadAsync())
+                    {
+                        eligibleFavoriteMealIds.Add(Convert.ToInt32(favoritesReader["mealId"]));
+                    }
+                }
+
                 var mealTypes = new[] { "breakfast", "lunch", "dinner" };
                 List<(int mealId, int calories, int protein, int carbs, int fat)> selectedMeals = null;
                 List<(int mealId, int calories, int protein, int carbs, int fat)> bestAttempt = null;
@@ -220,7 +244,38 @@ namespace TeamNut.Repositories
 
                     if (candidateMeals.Count >= 3)
                     {
-                        var testMeals = candidateMeals.Take(3).ToList();
+                        List<(int mealId, int calories, int protein, int carbs, int fat)> testMeals;
+
+                        var favoriteCandidates = candidateMeals
+                            .Where(m => eligibleFavoriteMealIds.Contains(m.mealId))
+                            .ToList();
+
+                        if (favoriteCandidates.Count > 0)
+                        {
+                            var favoriteMeal = favoriteCandidates.First();
+                            var otherMeals = candidateMeals
+                                .Where(m => m.mealId != favoriteMeal.mealId)
+                                .Take(2)
+                                .ToList();
+
+                            if (otherMeals.Count == 2)
+                            {
+                                testMeals = new List<(int mealId, int calories, int protein, int carbs, int fat)>
+                                {
+                                    favoriteMeal,
+                                    otherMeals[0],
+                                    otherMeals[1]
+                                };
+                            }
+                            else
+                            {
+                                testMeals = candidateMeals.Take(3).ToList();
+                            }
+                        }
+                        else
+                        {
+                            testMeals = candidateMeals.Take(3).ToList();
+                        }
 
                         // Keep track of best attempt
                         if (bestAttempt == null)
