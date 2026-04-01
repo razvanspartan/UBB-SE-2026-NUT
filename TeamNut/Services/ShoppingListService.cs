@@ -8,10 +8,12 @@ namespace TeamNut.Services
     public class ShoppingListService
     {
         private readonly TeamNut.Repositories.ShoppingListRepository _repository;
+        private readonly TeamNut.Repositories.IngredientRepository _ingredientRepository;
 
         public ShoppingListService()
         {
             _repository = new TeamNut.Repositories.ShoppingListRepository();
+            _ingredientRepository = new TeamNut.Repositories.IngredientRepository();
         }
 
         public async Task<List<ShoppingItem>> GetShoppingItemsAsync(int userId)
@@ -19,23 +21,26 @@ namespace TeamNut.Services
             return await _repository.GetAllByUserId(userId);
         }
 
-        public async Task<bool> AddItemAsync(ShoppingItem item)
+        public async Task<ShoppingItem> AddItemAsync(string itemName, int userId)
         {
-            if (item.UserId == 0) item.UserId = 1;
-
             try
             {
-                await _repository.Add(item);
-                
-                // Return the generated entity (or at least acknowledge success) 
-                // Normally you'd want to reload to get the DB ID but we simplify here
-                // Note: Without reloading the ID, deleting exactly this item right after could fail since object ID is 0.
-                // Given the constraints of the UI currently, we'll fetch them all later to get IDs
-                return true;
+                int ingredientId = await _ingredientRepository.GetOrCreateIngredientIdAsync(itemName);
+
+                var newItem = new ShoppingItem
+                {
+                    UserId = userId,
+                    IngredientId = ingredientId,
+                    IngredientName = itemName,
+                    IsChecked = false
+                };
+
+                await _repository.Add(newItem);
+                return newItem;
             }
             catch
             {
-                return false;
+                return null;
             }
         }
 

@@ -89,7 +89,7 @@
                             
                             <!-- Item Text -->
                             <TextBlock Grid.Column="1" 
-                                       Text="{x:Bind Name, Mode=OneWay}" 
+                                       Text="{x:Bind IngredientName, Mode=OneWay}" 
                                        VerticalAlignment="Center" 
                                        FontSize="16"
                                        TextWrapping="Wrap"/>

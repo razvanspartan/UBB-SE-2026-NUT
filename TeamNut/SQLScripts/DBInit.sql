@@ -152,7 +152,8 @@ CREATE TABLE Messages (
 CREATE TABLE ShoppingItems (
     id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT,
-    name VARCHAR(100) NOT NULL,
+    ingredient_id INT,
     is_checked BIT DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (ingredient_id) REFERENCES Ingredients(food_id) ON DELETE CASCADE
 );

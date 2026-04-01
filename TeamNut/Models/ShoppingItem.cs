@@ -6,9 +6,10 @@ namespace TeamNut.Models
     {
         public int Id { get; set; }
         public int UserId { get; set; }
+        public int IngredientId { get; set; }
 
         [ObservableProperty]
-        private string name;
+        private string ingredientName;
 
         [ObservableProperty]
         private bool isChecked;

@@ -15,12 +15,12 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = @"INSERT INTO ShoppingItems (user_id, name, is_checked)
-                             VALUES (@userId, @name, @isChecked)";
+            string query = @"INSERT INTO ShoppingItems (user_id, ingredient_id, is_checked)
+                             VALUES (@userId, @ingredientId, @isChecked)";
 
             using var cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@userId", item.UserId);
-            cmd.Parameters.AddWithValue("@name", item.Name);
+            cmd.Parameters.AddWithValue("@ingredientId", item.IngredientId);
             cmd.Parameters.AddWithValue("@isChecked", item.IsChecked ? 1 : 0);
 
             await cmd.ExecuteNonQueryAsync();
@@ -33,7 +33,9 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = "SELECT * FROM ShoppingItems";
+            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.is_checked, i.name AS ingredient_name 
+                             FROM ShoppingItems s 
+                             JOIN Ingredients i ON s.ingredient_id = i.food_id";
 
             using var cmd = new SqlCommand(query, conn);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -51,7 +53,10 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = "SELECT * FROM ShoppingItems WHERE id = @id";
+            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.is_checked, i.name AS ingredient_name 
+                             FROM ShoppingItems s 
+                             JOIN Ingredients i ON s.ingredient_id = i.food_id
+                             WHERE s.id = @id";
 
             using var cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@id", id);
@@ -73,7 +78,10 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = "SELECT * FROM ShoppingItems WHERE user_id = @userId";
+            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.is_checked, i.name AS ingredient_name 
+                             FROM ShoppingItems s 
+                             JOIN Ingredients i ON s.ingredient_id = i.food_id
+                             WHERE s.user_id = @userId";
 
             using var cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@userId", userId);
@@ -94,12 +102,12 @@ namespace TeamNut.Repositories
             await conn.OpenAsync();
 
             string query = @"UPDATE ShoppingItems 
-                             SET name = @name, is_checked = @isChecked
+                             SET ingredient_id = @ingredientId, is_checked = @isChecked
                              WHERE id = @id";
 
             using var cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@id", item.Id);
-            cmd.Parameters.AddWithValue("@name", item.Name);
+            cmd.Parameters.AddWithValue("@ingredientId", item.IngredientId);
             cmd.Parameters.AddWithValue("@isChecked", item.IsChecked ? 1 : 0);
 
             await cmd.ExecuteNonQueryAsync();
@@ -124,7 +132,8 @@ namespace TeamNut.Repositories
             {
                 Id = Convert.ToInt32(reader["id"]),
                 UserId = Convert.ToInt32(reader["user_id"]),
-                Name = reader["name"].ToString(),
+                IngredientId = Convert.ToInt32(reader["ingredient_id"]),
+                IngredientName = reader["ingredient_name"].ToString(),
                 IsChecked = Convert.ToBoolean(reader["is_checked"])
             };
         }

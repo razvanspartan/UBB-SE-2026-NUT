@@ -24,8 +24,9 @@ namespace TeamNut.ViewModels
 
         public async Task LoadItemsAsync()
         {
-            // In a real scenario, use UserSession.UserId. Using 1 to mock.
-            var loadedItems = await _shoppingListService.GetShoppingItemsAsync(1);
+            if (UserSession.UserId == null) return;
+
+            var loadedItems = await _shoppingListService.GetShoppingItemsAsync(UserSession.UserId.Value);
             
             Items.Clear();
             foreach (var item in loadedItems)
@@ -45,21 +46,19 @@ namespace TeamNut.ViewModels
         [RelayCommand]
         public async Task AddItem(string itemName)
         {
-            if (!string.IsNullOrWhiteSpace(itemName))
+            if (!string.IsNullOrWhiteSpace(itemName) && UserSession.UserId != null)
             {
-                var newItem = new ShoppingItem { Name = itemName.Trim(), IsChecked = false, UserId = 1 };
-                
-                bool success = await _shoppingListService.AddItemAsync(newItem);
-                if (success)
+                var addedItem = await _shoppingListService.AddItemAsync(itemName.Trim(), UserSession.UserId.Value);
+                if (addedItem != null)
                 {
-                    newItem.PropertyChanged += async (s, e) =>
+                    addedItem.PropertyChanged += async (s, e) =>
                     {
                         if (e.PropertyName == nameof(ShoppingItem.IsChecked))
                         {
                             await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
                         }
                     };
-                    Items.Add(newItem);
+                    Items.Add(addedItem);
                 }
             }
         }
