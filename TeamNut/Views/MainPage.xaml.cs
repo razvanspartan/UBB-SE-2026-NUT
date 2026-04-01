@@ -2,7 +2,7 @@ using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TeamNut.Models;
-using TeamNut.Views.MealPlanView;
+using TeamNut.Views;
 
 namespace TeamNut.Views
 {
@@ -16,10 +16,9 @@ namespace TeamNut.Views
         public MainPage()
         {
             this.InitializeComponent();
-            this.Loaded += MainPage_Loaded;
         }
 
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        private void MealsButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -68,7 +67,6 @@ namespace TeamNut.Views
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-
             UserSession.Logout();
 
             if (Application.Current is App app && app._window != null)

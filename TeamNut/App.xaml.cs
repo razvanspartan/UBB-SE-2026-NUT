@@ -26,7 +26,7 @@ namespace TeamNut
         {
             _window = new MainWindow();
 
-            _window.Content = new UserView();
+            _window.Content = new MainPage();
 
             _window.Activate();
         }
