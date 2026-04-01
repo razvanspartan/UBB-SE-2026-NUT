@@ -52,5 +52,10 @@ namespace TeamNut.Services
 
             await _mealRepository.SetFavoriteAsync(UserSession.UserId.Value, meal.Id, meal.IsFavorite);
         }
+
+        public async Task<List<string>> GetMealIngredientLinesAsync(int mealId)
+        {
+            return await _mealRepository.GetIngredientLinesForMealAsync(mealId);
+        }
     }
 }
