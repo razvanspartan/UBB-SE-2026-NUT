@@ -37,12 +37,7 @@
                 </Button>
             </Grid>
 
-            <Button 
-                x:Name="GenerateButton"
-                Content="Generate Personalized Meal Plan" 
-                Style="{StaticResource AccentButtonStyle}" 
-                HorizontalAlignment="Stretch"
-                Click="GenerateMealPlan_Click"/>
+            <!-- Removed Generate button - meal plans are now auto-generated daily -->
 
             <TextBlock 
                 x:Name="GoalDescriptionText"

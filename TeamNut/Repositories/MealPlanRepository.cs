@@ -41,7 +41,7 @@ namespace TeamNut.Repositories
         public async Task Add(MealPlan entity)
         {
             using var conn = new SqlConnection(_connectionString);
-            const string sql = @"INSERT INTO MealPlan (user_id, created_at, [goal type]) 
+            const string sql = @"INSERT INTO MealPlan (user_id, created_at, goal_type) 
                                 VALUES (@uid, @created, @goal)";
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@uid", entity.UserId);
@@ -55,7 +55,7 @@ namespace TeamNut.Repositories
         public async Task Update(MealPlan entity)
         {
             using var conn = new SqlConnection(_connectionString);
-            const string sql = @"UPDATE MealPlan SET [goal type] = @goal 
+            const string sql = @"UPDATE MealPlan SET goal_type = @goal 
                                  WHERE mealplan_id = @id";
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", entity.Id);
@@ -425,7 +425,7 @@ namespace TeamNut.Repositories
                 Id = Convert.ToInt32(reader["mealplan_id"]),
                 UserId = Convert.ToInt32(reader["user_id"]),
                 CreatedAt = Convert.ToDateTime(reader["created_at"]),
-                GoalType = reader["goal type"]?.ToString()
+                GoalType = reader["goal_type"]?.ToString()
             };
         }
     }

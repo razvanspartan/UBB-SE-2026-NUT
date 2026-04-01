@@ -37,10 +37,6 @@ namespace TeamNut.Views.MealPlanView
                 {
                     UpdateMealsList();
                 }
-                else if (e.PropertyName == nameof(ViewModel.IsBusy))
-                {
-                    GenerateButton.IsEnabled = !ViewModel.IsBusy;
-                }
                 else if (e.PropertyName == nameof(ViewModel.ShowErrorDialog) && ViewModel.ShowErrorDialog)
                 {
                     ShowErrorDialog();
@@ -52,14 +48,6 @@ namespace TeamNut.Views.MealPlanView
             {
                 UpdateMealsList();
             };
-        }
-
-        private void GenerateMealPlan_Click(object sender, RoutedEventArgs e)
-        {
-            if (ViewModel.GenerateMealPlanCommand.CanExecute(null))
-            {
-                ViewModel.GenerateMealPlanCommand.Execute(null);
-            }
         }
 
         private async void SettingsButton_Click(object sender, RoutedEventArgs e)
@@ -218,17 +206,15 @@ namespace TeamNut.Views.MealPlanView
                     var successDialog = new ContentDialog
                     {
                         Title = "✅ Settings Updated",
-                        Content = "Your preferences have been saved successfully!\n\nGenerate a new meal plan to see the changes.",
+                        Content = "Your preferences have been saved successfully!\n\n📅 Your new preferences will be applied to tomorrow's meal plan, which will be automatically generated when you log in.\n\n💡 Today's meal plan will remain unchanged.",
                         CloseButtonText = "OK",
                         XamlRoot = this.XamlRoot
                     };
                     _ = await successDialog.ShowAsync();
 
-                    // Clear current meals to prompt regeneration
-                    ViewModel.GeneratedMeals.Clear();
-                    StatusMessageText.Text = "⚠️ Your settings have changed. Please generate a new meal plan.";
-                    GoalDescriptionText.Text = "";
-                    TotalNutritionText.Text = "";
+                    // Don't clear meals - today's plan stays the same
+                    // The new settings will be used for tomorrow's auto-generated plan
+                    StatusMessageText.Text = "✅ Settings saved! New preferences will apply to tomorrow's meal plan.";
                 }
                 catch (Exception ex)
                 {

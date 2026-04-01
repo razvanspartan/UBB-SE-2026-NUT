@@ -100,6 +100,28 @@ namespace TeamNut.Services
         }
 
         /// <summary>
+        /// Gets today's meal plan for the specified user
+        /// </summary>
+        /// <param name="userId">The ID of the user</param>
+        /// <returns>The meal plan if found, null if no plan exists for today</returns>
+        public async Task<MealPlan> GetTodaysMealPlanAsync(int userId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("Invalid user ID.", nameof(userId));
+            }
+
+            try
+            {
+                return await _mealPlanRepository.GetTodaysMealPlan(userId);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error retrieving today's meal plan: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
         /// Gets all meal plans
         /// </summary>
         /// <returns>List of all meal plans</returns>
