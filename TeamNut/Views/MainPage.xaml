@@ -20,17 +20,28 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" 
-                           Text="TeamNut Home" 
-                           FontSize="24" 
-                           FontWeight="SemiBold" 
-                           VerticalAlignment="Center"/>
+                <!-- Left -->
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Spacing="15">
 
-                <Button Grid.Column="1" 
-                        Content="Logout" 
-                        VerticalAlignment="Center" 
+                    <TextBlock Text="TeamNut Home"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+
+                    <Button Content="Meals"
+                            VerticalAlignment="Center"
+                            Click="MealsButton_Click"/>
+                </StackPanel>
+
+                <!-- Right -->
+                <Button Grid.Column="1"
+                        Content="Logout"
+                        VerticalAlignment="Center"
                         Click="LogoutButton_Click"/>
             </Grid>
+
         </Border>
 
         <TabView Grid.Row="1" 

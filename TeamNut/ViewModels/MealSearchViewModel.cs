@@ -5,14 +5,16 @@ namespace TeamNut.ViewModels
 {
     public class MealSearchViewModel
     {
+        private List<Meal> meals;
+
         public MealSearchViewModel()
         {
-            // Ready for future service integration
+            meals = new List<Meal>();
         }
 
         public List<Meal> SearchMeals(MealFilter filter)
         {
-            return new List<Meal>(); // vnothing until
+            return meals;
         }
 
         public void ToggleFavorite(Meal meal)
