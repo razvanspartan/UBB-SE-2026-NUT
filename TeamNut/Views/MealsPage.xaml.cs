@@ -29,6 +29,8 @@ namespace TeamNut
             var meal = e.ClickedItem as Meal;
             if (meal == null) return;
 
+            var ingredientsText = await viewModel.GetMealIngredientsTextAsync(meal.Id);
+
             var panel = new StackPanel { Spacing = 10 };
 
             if (!string.IsNullOrEmpty(meal.ImageUrl))
@@ -46,7 +48,7 @@ namespace TeamNut
                        $"Protein: {meal.Protein}g\n" +
                        $"Carbs: {meal.Carbs}g\n" +
                        $"Fat: {meal.Fat}g\n\n" +
-                       $"Ingredients:\n{meal.Description ?? "Not available"}"
+                       $"Ingredients:\n{ingredientsText}"
             });
 
             ContentDialog dialog = new ContentDialog
@@ -60,17 +62,17 @@ namespace TeamNut
             await dialog.ShowAsync();
         }
 
-        private void Favorite_Click(object sender, RoutedEventArgs e)
+        private async void Favorite_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is Meal meal)
             {
-                viewModel.ToggleFavorite(meal);
+                await viewModel.ToggleFavoriteAsync(meal);
 
                 btn.Content = meal.IsFavorite ? "★" : "☆";
             }
         }
        
-        private void btnSearch_Click(object sender, RoutedEventArgs e)
+        private async void btnSearch_Click(object sender, RoutedEventArgs e)
         {
             var filter = new MealFilter
             {
@@ -82,9 +84,8 @@ namespace TeamNut
                 IsNutFree = chkNutFree.IsChecked == true
             };
 
-            var results = viewModel.SearchMeals(filter);
+            var results = await viewModel.SearchMealsAsync(filter);
 
-            // Favorites
             if (chkFavorites.IsChecked == true)
                 results = results.Where(m => m.IsFavorite).ToList();
 

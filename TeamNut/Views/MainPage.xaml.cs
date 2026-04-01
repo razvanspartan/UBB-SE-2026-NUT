@@ -10,7 +10,6 @@ namespace TeamNut.Views
     {
         private bool mealsLoaded = false;
         private bool mealPlanLoaded = false;
-        private bool calorieLoaded = false;
         private bool chatLoaded = false;
         private bool shoppingListLoaded = false;
 
@@ -52,6 +51,10 @@ namespace TeamNut.Views
                 {
                     MealPlanFrame.Navigate(typeof(TeamNut.Views.MealPlanView.MealPlanPage));
                     mealPlanLoaded = true;
+                }
+                else if (selectedItem == DailyLogTab)
+                {
+                    DailyLogFrame.Navigate(typeof(TeamNut.Views.CalorieLoggingView.CalorieLoggingPage));
                 }
                 else if (selectedItem == ChatTab && !chatLoaded)
                 {

@@ -186,6 +186,30 @@ namespace TeamNut.Repositories
                         AND total_fat BETWEEN @minFat AND @maxFat
                     ORDER BY NEWID()";
 
+                const string getEligibleFavoriteMealsSql = @"
+                    SELECT DISTINCT f.mealId
+                    FROM Favorites f
+                    WHERE f.userId = @userId
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM MealPlan mp
+                          INNER JOIN MealPlanMeal mpm ON mp.mealplan_id = mpm.mealPlanId
+                          WHERE mp.user_id = @userId
+                            AND mpm.mealId = f.mealId
+                            AND mp.created_at >= DATEADD(DAY, -3, CAST(GETDATE() AS DATE))
+                      )";
+
+                var eligibleFavoriteMealIds = new HashSet<int>();
+                using (var favoritesCmd = new SqlCommand(getEligibleFavoriteMealsSql, conn, transaction))
+                {
+                    favoritesCmd.Parameters.AddWithValue("@userId", userId);
+                    using var favoritesReader = await favoritesCmd.ExecuteReaderAsync();
+                    while (await favoritesReader.ReadAsync())
+                    {
+                        eligibleFavoriteMealIds.Add(Convert.ToInt32(favoritesReader["mealId"]));
+                    }
+                }
+
                 var mealTypes = new[] { "breakfast", "lunch", "dinner" };
                 List<(int mealId, int calories, int protein, int carbs, int fat)> selectedMeals = null;
                 List<(int mealId, int calories, int protein, int carbs, int fat)> bestAttempt = null;
@@ -220,7 +244,38 @@ namespace TeamNut.Repositories
 
                     if (candidateMeals.Count >= 3)
                     {
-                        var testMeals = candidateMeals.Take(3).ToList();
+                        List<(int mealId, int calories, int protein, int carbs, int fat)> testMeals;
+
+                        var favoriteCandidates = candidateMeals
+                            .Where(m => eligibleFavoriteMealIds.Contains(m.mealId))
+                            .ToList();
+
+                        if (favoriteCandidates.Count > 0)
+                        {
+                            var favoriteMeal = favoriteCandidates.First();
+                            var otherMeals = candidateMeals
+                                .Where(m => m.mealId != favoriteMeal.mealId)
+                                .Take(2)
+                                .ToList();
+
+                            if (otherMeals.Count == 2)
+                            {
+                                testMeals = new List<(int mealId, int calories, int protein, int carbs, int fat)>
+                                {
+                                    favoriteMeal,
+                                    otherMeals[0],
+                                    otherMeals[1]
+                                };
+                            }
+                            else
+                            {
+                                testMeals = candidateMeals.Take(3).ToList();
+                            }
+                        }
+                        else
+                        {
+                            testMeals = candidateMeals.Take(3).ToList();
+                        }
 
                         // Keep track of best attempt
                         if (bestAttempt == null)
@@ -379,6 +434,7 @@ namespace TeamNut.Repositories
 
             const string sql = @"
                 SELECT 
+                    mi.food_id,
                     i.name,
                     mi.quantity,
                     i.calories_per_100g,
@@ -398,6 +454,7 @@ namespace TeamNut.Repositories
 
             while (await reader.ReadAsync())
             {
+                int ingredientId = Convert.ToInt32(reader["food_id"]);
                 double quantity = Convert.ToDouble(reader["quantity"]);
                 double caloriesPer100g = Convert.ToDouble(reader["calories_per_100g"]);
                 double proteinPer100g = Convert.ToDouble(reader["protein_per_100g"]);
@@ -406,6 +463,7 @@ namespace TeamNut.Repositories
 
                 ingredients.Add(new Views.MealPlanView.IngredientViewModel
                 {
+                    IngredientId = ingredientId,
                     Name = reader["name"].ToString(),
                     Quantity = quantity,
                     Calories = Math.Round(caloriesPer100g * quantity / 100, 1),
@@ -427,6 +485,41 @@ namespace TeamNut.Repositories
                 CreatedAt = Convert.ToDateTime(reader["created_at"]),
                 GoalType = reader["goal_type"]?.ToString()
             };
+        }
+
+        public async Task SaveMealsToDailyLog(int userId, List<Meal> meals)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            const string sql = @"INSERT INTO DailyLogs (user_id, mealId, calories, created_at)
+                                VALUES (@userId, @mealId, @calories, @loggedAt)";
+
+            foreach (var meal in meals)
+            {
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@userId", userId);
+                cmd.Parameters.AddWithValue("@mealId", meal.Id);
+                cmd.Parameters.AddWithValue("@calories", meal.Calories);
+                cmd.Parameters.AddWithValue("@loggedAt", DateTime.Now);
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        public async Task SaveMealToDailyLog(int userId, int mealId, int calories)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            const string sql = @"INSERT INTO DailyLogs (user_id, mealId, calories, created_at)
+                                VALUES (@userId, @mealId, @calories, @loggedAt)";
+
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@mealId", mealId);
+            cmd.Parameters.AddWithValue("@calories", calories);
+            cmd.Parameters.AddWithValue("@loggedAt", DateTime.Now);
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

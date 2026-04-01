@@ -37,7 +37,16 @@
                 </Button>
             </Grid>
 
-            <!-- Removed Generate button - meal plans are now auto-generated daily -->
+            <Button
+                x:Name="RegenerateTestButton"
+                HorizontalAlignment="Center"
+                Click="RegenerateTestButton_Click"
+                Margin="0,5,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE72C;" FontSize="14"/>
+                    <TextBlock Text="Regenerate (Test)" FontSize="13"/>
+                </StackPanel>
+            </Button>
 
             <TextBlock 
                 x:Name="GoalDescriptionText"
@@ -69,13 +78,6 @@
         <!-- Meals List Section -->
         <ScrollViewer Grid.Row="1" Margin="0,20,0,0">
             <StackPanel MaxWidth="800" Spacing="15">
-                <TextBlock 
-                    x:Name="MealsCountText"
-                    FontSize="16"
-                    FontWeight="SemiBold"
-                    Margin="0,0,0,10"
-                    Visibility="Collapsed"/>
-
                 <ListView 
                     x:Name="MealsListView"
                     SelectionMode="None">
@@ -96,11 +98,19 @@
 
                                 <!-- Meal Info -->
                                 <StackPanel Grid.Column="0" Spacing="8">
-                                    <!-- Meal Name -->
-                                    <TextBlock 
-                                        Text="{Binding Name}"
-                                        FontSize="18"
-                                        FontWeight="SemiBold"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <TextBlock 
+                                            Text="{Binding Name}"
+                                            FontSize="18"
+                                            FontWeight="SemiBold"/>
+                                        <Border
+                                            Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                            CornerRadius="4"
+                                            Padding="8,2"
+                                            VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding MealType}" FontSize="12" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </StackPanel>
 
                                     <!-- Description -->
                                     <TextBlock 
@@ -112,7 +122,6 @@
                                     <!-- Nutritional Info -->
                                     <StackPanel Orientation="Horizontal" Spacing="15">
                                         <StackPanel Orientation="Horizontal" Spacing="5">
-                                            <TextBlock Text="🔥" FontSize="14"/>
                                             <TextBlock FontWeight="SemiBold">
                                                 <Run Text="{Binding Calories}"/>
                                                 <Run Text="kcal" FontWeight="Normal"/>
@@ -120,7 +129,6 @@
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Spacing="5">
-                                            <TextBlock Text="🥩" FontSize="14"/>
                                             <TextBlock>
                                                 <Run Text="{Binding Protein}"/>
                                                 <Run Text="g protein"/>
@@ -128,7 +136,6 @@
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Spacing="5">
-                                            <TextBlock Text="🍞" FontSize="14"/>
                                             <TextBlock>
                                                 <Run Text="{Binding Carbs}"/>
                                                 <Run Text="g carbs"/>
@@ -136,7 +143,6 @@
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal" Spacing="5">
-                                            <TextBlock Text="🥑" FontSize="14"/>
                                             <TextBlock>
                                                 <Run Text="{Binding Fat}"/>
                                                 <Run Text="g fat"/>
@@ -151,44 +157,64 @@
                                             CornerRadius="4"
                                             Padding="8,4"
                                             Visibility="{Binding IsVegan}">
-                                            <TextBlock Text="🌱 Vegan" FontSize="12"/>
+                                            <TextBlock Text="Vegan" FontSize="12"/>
                                         </Border>
                                         <Border 
                                             Background="{ThemeResource SystemFillColorCautionBrush}"
                                             CornerRadius="4"
                                             Padding="8,4"
                                             Visibility="{Binding IsKeto}">
-                                            <TextBlock Text="🥓 Keto" FontSize="12"/>
+                                            <TextBlock Text="Keto" FontSize="12"/>
                                         </Border>
                                         <Border 
                                             Background="{ThemeResource SystemFillColorAttentionBrush}"
                                             CornerRadius="4"
                                             Padding="8,4"
                                             Visibility="{Binding IsGlutenFree}">
-                                            <TextBlock Text="🌾 Gluten-Free" FontSize="12"/>
+                                            <TextBlock Text="Gluten-Free" FontSize="12"/>
                                         </Border>
                                         <Border 
                                             Background="{ThemeResource SystemFillColorCriticalBrush}"
                                             CornerRadius="4"
                                             Padding="8,4"
                                             Visibility="{Binding IsLactoseFree}">
-                                            <TextBlock Text="🥛 Lactose-Free" FontSize="12"/>
+                                            <TextBlock Text="Lactose-Free" FontSize="12"/>
                                         </Border>
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Favorite Icon -->
-                                <FontIcon 
-                                    Grid.Column="1"
-                                    Glyph="&#xE735;"
-                                    FontSize="24"
-                                    Foreground="Gold"
-                                    VerticalAlignment="Top"
-                                    Visibility="{Binding IsFavorite}"/>
+                                <!-- Actions -->
+                                <StackPanel Grid.Column="1" Spacing="10" VerticalAlignment="Top">
+                                    <FontIcon 
+                                        Glyph="&#xE735;"
+                                        FontSize="24"
+                                        Foreground="Gold"
+                                        HorizontalAlignment="Center"
+                                        Visibility="{Binding IsFavorite}"/>
+
+                                    <Button
+                                        Content="Add to Logs"
+                                        Click="AddMealToLogsButton_Click"
+                                        HorizontalAlignment="Right"
+                                        MinWidth="110"/>
+                                </StackPanel>
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+
+                <!-- Save to Daily Log Button -->
+                <Button 
+                    x:Name="SaveToDailyLogButton"
+                    HorizontalAlignment="Center"
+                    Margin="0,20,0,20"
+                    Click="SaveToDailyLogButton_Click"
+                    Style="{StaticResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE74E;" FontSize="16"/>
+                        <TextBlock Text="Save to Daily Log"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </ScrollViewer>
     </Grid>

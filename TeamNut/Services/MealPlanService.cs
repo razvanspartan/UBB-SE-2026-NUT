@@ -241,5 +241,31 @@ namespace TeamNut.Services
                 return "maintenance";
             }
         }
+
+        /// <summary>
+        /// Saves individual meals from a meal plan to the DailyLogs table
+        /// </summary>
+        /// <param name="mealPlanId">The meal plan ID to get meals from</param>
+        public async Task SaveMealsToDailyLogAsync(int mealPlanId)
+        {
+            if (!UserSession.UserId.HasValue)
+            {
+                throw new InvalidOperationException("User must be logged in to save daily logs.");
+            }
+
+            var meals = await GetMealsForMealPlanAsync(mealPlanId);
+            await _mealPlanRepository.SaveMealsToDailyLog(UserSession.UserId.Value, meals);
+        }
+
+        public async Task SaveMealToDailyLogAsync(int mealId, int calories)
+        {
+            if (!UserSession.UserId.HasValue)
+            {
+                throw new InvalidOperationException("User must be logged in to save daily logs.");
+            }
+
+            await _mealPlanRepository.SaveMealToDailyLog(UserSession.UserId.Value, mealId, calories);
+        }
     }
 }
+
