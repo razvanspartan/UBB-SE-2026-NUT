@@ -1,48 +1,79 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Threading.Tasks;
+
+using TeamNut.Models;
+using TeamNut.Services;
 
 namespace TeamNut.ViewModels
 {
-    public partial class ShoppingItem : ObservableObject
-    {
-        [ObservableProperty]
-        private string name;
-
-        [ObservableProperty]
-        private bool isChecked;
-    }
 
     public partial class ShoppingListViewModel : ObservableObject
     {
+        private readonly ShoppingListService _shoppingListService;
+
         [ObservableProperty]
         private ObservableCollection<ShoppingItem> items = new ObservableCollection<ShoppingItem>();
 
         public ShoppingListViewModel()
         {
-            // Adding mock data for the UI
-            Items.Add(new ShoppingItem { Name = "Whole Wheat Bread", IsChecked = false });
-            Items.Add(new ShoppingItem { Name = "Almond Milk", IsChecked = true });
-            Items.Add(new ShoppingItem { Name = "Eggs", IsChecked = false });
-            Items.Add(new ShoppingItem { Name = "Chicken Breast", IsChecked = false });
-            Items.Add(new ShoppingItem { Name = "Spinach", IsChecked = false });
+            _shoppingListService = new ShoppingListService();
+            _ = LoadItemsAsync();
         }
 
-        [RelayCommand]
-        public void AddItem(string itemName)
+        public async Task LoadItemsAsync()
         {
-            if (!string.IsNullOrWhiteSpace(itemName))
+            // In a real scenario, use UserSession.UserId. Using 1 to mock.
+            var loadedItems = await _shoppingListService.GetShoppingItemsAsync(1);
+            
+            Items.Clear();
+            foreach (var item in loadedItems)
             {
-                Items.Add(new ShoppingItem { Name = itemName.Trim(), IsChecked = false });
+                // Subscribe to PropertyChanged to automatically update standard properties to the DB when checked
+                item.PropertyChanged += async (s, e) =>
+                {
+                    if (e.PropertyName == nameof(ShoppingItem.IsChecked))
+                    {
+                        await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
+                    }
+                };
+                Items.Add(item);
             }
         }
 
         [RelayCommand]
-        public void DeleteItem(ShoppingItem item)
+        public async Task AddItem(string itemName)
+        {
+            if (!string.IsNullOrWhiteSpace(itemName))
+            {
+                var newItem = new ShoppingItem { Name = itemName.Trim(), IsChecked = false, UserId = 1 };
+                
+                bool success = await _shoppingListService.AddItemAsync(newItem);
+                if (success)
+                {
+                    newItem.PropertyChanged += async (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(ShoppingItem.IsChecked))
+                        {
+                            await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
+                        }
+                    };
+                    Items.Add(newItem);
+                }
+            }
+        }
+
+        [RelayCommand]
+        public async Task DeleteItem(ShoppingItem item)
         {
             if (item != null && Items.Contains(item))
             {
-                Items.Remove(item);
+                bool success = await _shoppingListService.RemoveItemAsync(item);
+                if (success)
+                {
+                    Items.Remove(item);
+                }
             }
         }
     }
