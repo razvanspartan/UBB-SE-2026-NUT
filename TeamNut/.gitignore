@@ -4,5 +4,6 @@ obj/
 *.user
 *.suo
 *.db
-*.cache
+*.cachegii
 Copilot*
+TeamNut/Repositories/DbConfig.cs
