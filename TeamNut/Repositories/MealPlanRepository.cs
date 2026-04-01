@@ -41,7 +41,7 @@ namespace TeamNut.Repositories
         public async Task Add(MealPlan entity)
         {
             using var conn = new SqlConnection(_connectionString);
-            const string sql = @"INSERT INTO MealPlan (user_id, created_at, [goal type]) 
+            const string sql = @"INSERT INTO MealPlan (user_id, created_at, goal_type) 
                                 VALUES (@uid, @created, @goal)";
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@uid", entity.UserId);
@@ -55,7 +55,7 @@ namespace TeamNut.Repositories
         public async Task Update(MealPlan entity)
         {
             using var conn = new SqlConnection(_connectionString);
-            const string sql = @"UPDATE MealPlan SET [goal type] = @goal 
+            const string sql = @"UPDATE MealPlan SET goal_type = @goal 
                                  WHERE mealplan_id = @id";
             using var cmd = new SqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", entity.Id);
@@ -132,28 +132,28 @@ namespace TeamNut.Repositories
                 }
                 reader.Close();
 
-                int dailyCalorieMin = calorieNeeds - 100;
-                int dailyCalorieMax = calorieNeeds + 100;
-                int dailyProteinMin = proteinNeeds - 20;
-                int dailyProteinMax = proteinNeeds + 20;
-                int dailyCarbMin = carbNeeds - 20;
-                int dailyCarbMax = carbNeeds + 20;
-                int dailyFatMin = fatNeeds - 20;
-                int dailyFatMax = fatNeeds + 20;
+                int dailyCalorieMin = calorieNeeds - 200;
+                int dailyCalorieMax = calorieNeeds + 200;
+                int dailyProteinMin = proteinNeeds - 30;
+                int dailyProteinMax = proteinNeeds + 30;
+                int dailyCarbMin = carbNeeds - 30;
+                int dailyCarbMax = carbNeeds + 30;
+                int dailyFatMin = fatNeeds - 30;
+                int dailyFatMax = fatNeeds + 30;
 
                 int targetCaloriesPerMeal = calorieNeeds / 3;
                 int targetProteinPerMeal = proteinNeeds / 3;
                 int targetCarbPerMeal = carbNeeds / 3;
                 int targetFatPerMeal = fatNeeds / 3;
 
-                int flexibleCalorieMin = targetCaloriesPerMeal - 150;
-                int flexibleCalorieMax = targetCaloriesPerMeal + 150;
-                int flexibleProteinMin = Math.Max(0, targetProteinPerMeal - 30);
-                int flexibleProteinMax = targetProteinPerMeal + 30;
-                int flexibleCarbMin = Math.Max(0, targetCarbPerMeal - 30);
-                int flexibleCarbMax = targetCarbPerMeal + 30;
-                int flexibleFatMin = Math.Max(0, targetFatPerMeal - 30);
-                int flexibleFatMax = targetFatPerMeal + 30;
+                int flexibleCalorieMin = targetCaloriesPerMeal - 250;
+                int flexibleCalorieMax = targetCaloriesPerMeal + 250;
+                int flexibleProteinMin = Math.Max(0, targetProteinPerMeal - 40);
+                int flexibleProteinMax = targetProteinPerMeal + 40;
+                int flexibleCarbMin = Math.Max(0, targetCarbPerMeal - 40);
+                int flexibleCarbMax = targetCarbPerMeal + 40;
+                int flexibleFatMin = Math.Max(0, targetFatPerMeal - 40);
+                int flexibleFatMax = targetFatPerMeal + 40;
 
                 const string insertPlanSql = @"INSERT INTO MealPlan (user_id, created_at, goal_type) 
                                                OUTPUT INSERTED.mealplan_id
@@ -188,7 +188,8 @@ namespace TeamNut.Repositories
 
                 var mealTypes = new[] { "breakfast", "lunch", "dinner" };
                 List<(int mealId, int calories, int protein, int carbs, int fat)> selectedMeals = null;
-                int maxAttempts = 10;
+                List<(int mealId, int calories, int protein, int carbs, int fat)> bestAttempt = null;
+                int maxAttempts = 20;
 
                 for (int attempt = 0; attempt < maxAttempts; attempt++)
                 {
@@ -220,6 +221,13 @@ namespace TeamNut.Repositories
                     if (candidateMeals.Count >= 3)
                     {
                         var testMeals = candidateMeals.Take(3).ToList();
+
+                        // Keep track of best attempt
+                        if (bestAttempt == null)
+                        {
+                            bestAttempt = testMeals;
+                        }
+
                         int totalCalories = testMeals.Sum(m => m.calories);
                         int totalProtein = testMeals.Sum(m => m.protein);
                         int totalCarbs = testMeals.Sum(m => m.carbs);
@@ -233,6 +241,16 @@ namespace TeamNut.Repositories
                             selectedMeals = testMeals;
                             break;
                         }
+                        else
+                        {
+                            // Update best attempt if this one is closer to calorie target
+                            int currentDiff = Math.Abs(totalCalories - calorieNeeds);
+                            int bestDiff = Math.Abs(bestAttempt.Sum(m => m.calories) - calorieNeeds);
+                            if (currentDiff < bestDiff)
+                            {
+                                bestAttempt = testMeals;
+                            }
+                        }
                     }
                 }
 
@@ -241,9 +259,14 @@ namespace TeamNut.Repositories
                 {
                     mealIds = selectedMeals.Select(m => m.mealId).ToList();
                 }
+                else if (bestAttempt != null && bestAttempt.Count >= 3)
+                {
+                    // Use best attempt if no perfect match found
+                    mealIds = bestAttempt.Take(3).Select(m => m.mealId).ToList();
+                }
                 else
                 {
-                    // Fallback to any 3 random meals
+                    // Only fall back to random if absolutely necessary
                     mealIds = new List<int>();
                     const string fallbackSql = "SELECT TOP 3 meal_id FROM Meals ORDER BY NEWID()";
                     using var fallbackCmd = new SqlCommand(fallbackSql, conn, transaction);
@@ -402,7 +425,7 @@ namespace TeamNut.Repositories
                 Id = Convert.ToInt32(reader["mealplan_id"]),
                 UserId = Convert.ToInt32(reader["user_id"]),
                 CreatedAt = Convert.ToDateTime(reader["created_at"]),
-                GoalType = reader["goal type"]?.ToString()
+                GoalType = reader["goal_type"]?.ToString()
             };
         }
     }

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
-using TeamNut.Repositories;
 using TeamNut.Services;
 using TeamNut.Views.MealPlanView;
 
@@ -15,7 +14,7 @@ namespace TeamNut.ModelViews
 {
     public partial class MealPlanViewModel : ObservableObject
     {
-        private readonly MealPlanRepository _mealPlanRepository;
+        private readonly MealPlanService _mealPlanService;
 
         [ObservableProperty]
         public partial string StatusMessage { get; set; }
@@ -61,58 +60,100 @@ namespace TeamNut.ModelViews
             set => SetProperty(ref _hasMeals, value);
         }
 
+        [ObservableProperty]
+        public partial string TotalNutritionSummary { get; set; }
+
+        [ObservableProperty]
+        private string goalDescription;
+
+        [ObservableProperty]
+        private bool showErrorDialog;
+
+        [ObservableProperty]
+        private string errorDialogTitle;
+
+        [ObservableProperty]
+        private string errorDialogMessage;
+
         public MealPlanViewModel()
         {
-            _mealPlanRepository = new MealPlanRepository();
+            _mealPlanService = new MealPlanService();
+
+            // Auto-load meal plan when view model is created
+            _ = LoadOrGenerateTodaysMealPlanAsync();
         }
 
         [RelayCommand]
         private async Task OnGenerateMealPlan()
         {
-            StatusMessage = string.Empty;
+            // Since we auto-generate on page load, this button now just refreshes the current plan
+            // Check if a plan already exists for today
+            int? userId = UserSession.UserId;
+
+            if (userId == null || userId <= 0)
+            {
+                ErrorDialogTitle = "User Not Logged In";
+                ErrorDialogMessage = "You need to be logged in to view your meal plan.\n\nPlease create an account or log in to continue.";
+                ShowErrorDialog = true;
+                StatusMessage = "❌ Please log in to view your meal plan.";
+                return;
+            }
+
+            var todaysPlan = await _mealPlanService.GetTodaysMealPlanAsync(userId.Value);
+
+            if (todaysPlan != null)
+            {
+                // Plan already exists for today
+                ErrorDialogTitle = "Meal Plan Already Exists";
+                ErrorDialogMessage = "You already have a meal plan for today.\n\nYour meal plan will automatically regenerate tomorrow based on your latest preferences.\n\nIf you changed your settings, the new preferences will apply to tomorrow's meal plan.";
+                ShowErrorDialog = true;
+                StatusMessage = "⚠️ Meal plan already generated for today. New plan tomorrow!";
+            }
+            else
+            {
+                // Generate new plan
+                await LoadOrGenerateTodaysMealPlanAsync();
+            }
+        }
+
+        /// <summary>
+        /// Loads today's meal plan if it exists, otherwise generates a new one automatically
+        /// This method is called when the page loads
+        /// </summary>
+        public async Task LoadOrGenerateTodaysMealPlanAsync()
+        {
             IsBusy = true;
+            StatusMessage = "Loading your meal plan...";
             GeneratedMeals.Clear();
+            TotalNutritionSummary = string.Empty;
+            GoalDescription = string.Empty;
 
             try
             {
-                StatusMessage = "Generating your personalized daily meal plan...";
+                int? userId = UserSession.UserId;
 
-                int userId = UserSession.UserId ?? 1;
-
-                int mealPlanId = await _mealPlanRepository.GeneratePersonalizedDailyMealPlan(userId);
-
-                StatusMessage = $"Meal plan created (ID: {mealPlanId}). Loading meals...";
-
-                var meals = await _mealPlanRepository.GetMealsForMealPlan(mealPlanId);
-
-                if (meals == null || meals.Count == 0)
+                if (userId == null || userId <= 0)
                 {
-                    StatusMessage = "Meal plan created but no meals were returned. Check database data.";
+                    StatusMessage = "Please log in to view your meal plan.";
                     HasMeals = false;
                     return;
                 }
 
-                var mealTypes = new Dictionary<int, string>
-                {
-                    { 0, "BREAKFAST" },
-                    { 1, "LUNCH" },
-                    { 2, "DINNER" }
-                };
+                // Check if there's already a meal plan for today
+                var todaysPlan = await _mealPlanService.GetTodaysMealPlanAsync(userId.Value);
 
-                int index = 0;
-                foreach (var meal in meals)
+                if (todaysPlan != null)
                 {
-                    var mealType = mealTypes.ContainsKey(index) ? mealTypes[index] : "MEAL";
-                    var mealViewModel = MealViewModel.FromMeal(meal, mealType);
-                    mealViewModel.Ingredients = await _mealPlanRepository.GetIngredientsForMeal(meal.Id);
-                    GeneratedMeals.Add(mealViewModel);
-                    index++;
+                    // Load existing plan
+                    StatusMessage = "Loading your meal plan for today...";
+                    await LoadMealPlanByIdAsync(todaysPlan.Id, userId.Value);
                 }
-
-                CalculateTotals();
-                HasMeals = GeneratedMeals.Count > 0;
-
-                StatusMessage = $"Success! {meals.Count} meals added. Total: {TotalCalories} cal, {TotalProtein}g protein, {TotalCarbs}g carbs, {TotalFat}g fat";
+                else
+                {
+                    // Generate new plan for today
+                    StatusMessage = "Generating your personalized meal plan for today...";
+                    await GenerateNewMealPlanAsync(userId.Value);
+                }
             }
             catch (Exception ex)
             {
@@ -125,58 +166,104 @@ namespace TeamNut.ModelViews
             }
         }
 
-        public async void LoadTodaysMealPlan()
+        /// <summary>
+        /// Loads an existing meal plan by ID
+        /// </summary>
+        private async Task LoadMealPlanByIdAsync(int mealPlanId, int userId)
         {
-            IsBusy = true;
-            StatusMessage = "Loading your meal plan for today...";
-            GeneratedMeals.Clear();
-
             try
             {
-                int userId = UserSession.UserId ?? 1;
+                // Get the user's goal
+                string userGoal = await _mealPlanService.GetUserGoalAsync(userId);
 
-                var todayPlan = await _mealPlanRepository.GetTodaysMealPlan(userId);
+                // Load meals for this plan
+                var meals = await _mealPlanService.GetMealsForMealPlanAsync(mealPlanId);
 
-                if (todayPlan != null)
+                if (meals == null || meals.Count == 0)
                 {
-                    var meals = await _mealPlanRepository.GetMealsForMealPlan(todayPlan.Id);
-
-                    var mealTypes = new Dictionary<int, string>
-                    {
-                        { 0, "BREAKFAST" },
-                        { 1, "LUNCH" },
-                        { 2, "DINNER" }
-                    };
-
-                    int index = 0;
-                    foreach (var meal in meals)
-                    {
-                        var mealType = mealTypes.ContainsKey(index) ? mealTypes[index] : "MEAL";
-                        var mealViewModel = MealViewModel.FromMeal(meal, mealType);
-                        mealViewModel.Ingredients = await _mealPlanRepository.GetIngredientsForMeal(meal.Id);
-                        GeneratedMeals.Add(mealViewModel);
-                        index++;
-                    }
-
-                    CalculateTotals();
-                    HasMeals = GeneratedMeals.Count > 0;
-                    StatusMessage = string.Empty;
-                }
-                else
-                {
-                    StatusMessage = "No meal plan found for today. Generate a new one!";
+                    StatusMessage = "No meals found in your plan. Please try regenerating tomorrow.";
                     HasMeals = false;
+                    return;
                 }
+
+                // Convert meals to MealViewModel
+                int index = 0;
+                var mealTypes = new Dictionary<int, string>
+                {
+                    { 0, "BREAKFAST" },
+                    { 1, "LUNCH" },
+                    { 2, "DINNER" }
+                };
+
+                foreach (var meal in meals)
+                {
+                    var mealType = mealTypes.ContainsKey(index) ? mealTypes[index] : "MEAL";
+                    var mealViewModel = MealViewModel.FromMeal(meal, mealType);
+                    GeneratedMeals.Add(mealViewModel);
+                    index++;
+                }
+
+                CalculateTotals();
+
+                // Calculate and display total nutrition
+                var (totalCalories, totalProtein, totalCarbs, totalFat) = _mealPlanService.CalculateTotalNutrition(meals);
+
+                // Display goal information with emoji
+                string goalEmoji = _mealPlanService.GetGoalEmoji(userGoal);
+                string goalName = char.ToUpper(userGoal[0]) + userGoal.Substring(1);
+                GoalDescription = $"{goalEmoji} {goalName} Goal";
+
+                TotalNutritionSummary = $"Daily Total: {totalCalories} kcal | {totalProtein}g protein | {totalCarbs}g carbs | {totalFat}g fat";
+
+                StatusMessage = $"✅ Your meal plan for today ({goalName} goal)";
+                HasMeals = true;
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Error loading meal plan: {ex.Message}";
                 HasMeals = false;
             }
-            finally
+        }
+
+        /// <summary>
+        /// Generates a new meal plan for the user
+        /// </summary>
+        private async Task GenerateNewMealPlanAsync(int userId)
+        {
+            try
             {
-                IsBusy = false;
+                // Get the user's goal
+                string userGoal = await _mealPlanService.GetUserGoalAsync(userId);
+
+                // Generate the meal plan
+                int mealPlanId = await _mealPlanService.GeneratePersonalizedMealPlanAsync(userId);
+
+                // Load the generated meals
+                await LoadMealPlanByIdAsync(mealPlanId, userId);
+
+                StatusMessage = $"✅ New meal plan generated for today!";
             }
+            catch (InvalidOperationException ex)
+            {
+                ErrorDialogTitle = "Error Generating Meal Plan";
+                ErrorDialogMessage = ex.Message;
+                ShowErrorDialog = true;
+                StatusMessage = $"❌ {ex.Message}";
+                HasMeals = false;
+            }
+            catch (Exception ex)
+            {
+                ErrorDialogTitle = "Unexpected Error";
+                ErrorDialogMessage = $"An unexpected error occurred:\n\n{ex.Message}";
+                ShowErrorDialog = true;
+                StatusMessage = $"❌ Error: {ex.Message}";
+                HasMeals = false;
+            }
+        }
+
+        public async void LoadTodaysMealPlan()
+        {
+            await LoadOrGenerateTodaysMealPlanAsync();
         }
 
         private void CalculateTotals()
