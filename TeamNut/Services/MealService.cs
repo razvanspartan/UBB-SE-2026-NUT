@@ -1,48 +1,41 @@
 ﻿using System.Collections.Generic;
-using NutApp.Domain;
-using NutApp.Backend.Repositories;
+using System.Linq;
+using System.Threading.Tasks;
+using TeamNut.Models;
+using TeamNut.Repositories;
 
-namespace NutApp.Backend.Services
+namespace TeamNut.Services
 {
     public class MealService
     {
         private readonly MealRepository _mealRepository;
 
-        
         public MealService()
         {
             _mealRepository = new MealRepository();
         }
 
-        
-        public List<Meal> GetMeals(string filter = null)
+        // Return all meals or apply a simple text filter on the meal name
+        public Task<List<Meal>> GetMealsAsync(string? filter = null)
         {
-            
+            var meals = _mealRepository.GetMeals() ?? new List<Meal>();
+
             if (string.IsNullOrWhiteSpace(filter) || filter == "All")
-            {
-                return _mealRepository.GetAllMeals();
-            }
+                return Task.FromResult(meals);
 
-            
-            return _mealRepository.GetMealsByFilter(filter);
+            var filtered = meals.Where(m => (m.Name ?? string.Empty).Contains(filter, System.StringComparison.OrdinalIgnoreCase)).ToList();
+            return Task.FromResult(filtered);
         }
 
-        
-        public void ToggleFavorite(int userId, int mealId, bool currentlyFavorited)
+        public async Task<Meal?> GetByIdAsync(int id)
         {
-            if (currentlyFavorited)
-            {
-                _mealRepository.RemoveFavorite(userId, mealId);
-            }
-            else
-            {
-                _mealRepository.AddFavorite(userId, mealId);
-            }
+            return await _mealRepository.GetById(id);
         }
 
-        public List<Meal> GetUserFavorites(int userId)
+        public async Task<List<Meal>> GetAllAsync()
         {
-            return _mealRepository.GetUserFavorites(userId);
+            var list = await _mealRepository.GetAll();
+            return list.ToList();
         }
     }
 }
