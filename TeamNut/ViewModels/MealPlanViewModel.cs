@@ -317,6 +317,29 @@ namespace TeamNut.ModelViews
             await _mealPlanService.SaveMealsToDailyLogAsync(CurrentMealPlanId);
         }
 
+        public async Task RegenerateMealPlanForTestingAsync()
+        {
+            int? userId = UserSession.UserId;
+
+            if (userId == null || userId <= 0)
+            {
+                throw new InvalidOperationException("You must be logged in to regenerate a meal plan.");
+            }
+
+            IsBusy = true;
+            StatusMessage = "Regenerating meal plan (test)...";
+            GeneratedMeals.Clear();
+
+            try
+            {
+                await GenerateNewMealPlanAsync(userId.Value);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         public async Task SaveMealToDailyLogAsync(int mealId)
         {
             var meal = GeneratedMeals.FirstOrDefault(m => m.Id == mealId);

@@ -37,7 +37,16 @@
                 </Button>
             </Grid>
 
-            <!-- Removed Generate button - meal plans are now auto-generated daily -->
+            <Button
+                x:Name="RegenerateTestButton"
+                HorizontalAlignment="Center"
+                Click="RegenerateTestButton_Click"
+                Margin="0,5,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE72C;" FontSize="14"/>
+                    <TextBlock Text="Regenerate (Test)" FontSize="13"/>
+                </StackPanel>
+            </Button>
 
             <TextBlock 
                 x:Name="GoalDescriptionText"

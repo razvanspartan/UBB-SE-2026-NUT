@@ -312,6 +312,26 @@ namespace TeamNut.Views.MealPlanView
             }
         }
 
+        private async void RegenerateTestButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await ViewModel.RegenerateMealPlanForTestingAsync();
+                UpdateMealsList();
+            }
+            catch (Exception ex)
+            {
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Regeneration Failed",
+                    Content = ex.Message,
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await errorDialog.ShowAsync();
+            }
+        }
+
         private async void AddMealToLogsButton_Click(object sender, RoutedEventArgs e)
         {
             try

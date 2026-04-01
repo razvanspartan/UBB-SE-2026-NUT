@@ -62,11 +62,11 @@ namespace TeamNut
             await dialog.ShowAsync();
         }
 
-        private void Favorite_Click(object sender, RoutedEventArgs e)
+        private async void Favorite_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is Meal meal)
             {
-                viewModel.ToggleFavorite(meal);
+                await viewModel.ToggleFavoriteAsync(meal);
 
                 btn.Content = meal.IsFavorite ? "★" : "☆";
             }
