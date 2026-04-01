@@ -40,7 +40,7 @@ namespace TeamNut.ViewModels
                 CurrentUser.Role = "Nutritionist";
             }
             else
-                {
+            {
                 CurrentUser.Role = "User";
             }
             List<String> errors = CurrentUser.ValidateAndReturnErrors();
@@ -54,7 +54,7 @@ namespace TeamNut.ViewModels
                 this.StatusMessage = "Username already exists. Please choose another one.";
                 return;
             }
-            if(CurrentUser.Role == "User")
+            if (CurrentUser.Role == "User")
                 RegistrationValid?.Invoke(this, EventArgs.Empty);
             else
             {

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Services;
+using TeamNut.Views.MealPlanView;
 
 namespace TeamNut.ModelViews
 {
@@ -22,7 +23,42 @@ namespace TeamNut.ModelViews
         public partial bool IsBusy { get; set; }
 
         [ObservableProperty]
-        private ObservableCollection<Meal> generatedMeals = new ObservableCollection<Meal>();
+        private ObservableCollection<MealViewModel> generatedMeals = new ObservableCollection<MealViewModel>();
+
+        private int _totalCalories;
+        public int TotalCalories
+        {
+            get => _totalCalories;
+            set => SetProperty(ref _totalCalories, value);
+        }
+
+        private int _totalProtein;
+        public int TotalProtein
+        {
+            get => _totalProtein;
+            set => SetProperty(ref _totalProtein, value);
+        }
+
+        private int _totalCarbs;
+        public int TotalCarbs
+        {
+            get => _totalCarbs;
+            set => SetProperty(ref _totalCarbs, value);
+        }
+
+        private int _totalFat;
+        public int TotalFat
+        {
+            get => _totalFat;
+            set => SetProperty(ref _totalFat, value);
+        }
+
+        private bool _hasMeals;
+        public bool HasMeals
+        {
+            get => _hasMeals;
+            set => SetProperty(ref _hasMeals, value);
+        }
 
         [ObservableProperty]
         public partial string TotalNutritionSummary { get; set; }
@@ -45,7 +81,7 @@ namespace TeamNut.ModelViews
         }
 
         [RelayCommand]
-        private async void OnGenerateMealPlan()
+        private async Task OnGenerateMealPlan()
         {
             StatusMessage = string.Empty;
             TotalNutritionSummary = string.Empty;
@@ -114,6 +150,68 @@ namespace TeamNut.ModelViews
             {
                 IsBusy = false;
             }
+        }
+
+        public async void LoadTodaysMealPlan()
+        {
+            IsBusy = true;
+            StatusMessage = "Loading your meal plan for today...";
+            GeneratedMeals.Clear();
+
+            try
+            {
+                int userId = UserSession.UserId ?? 1;
+
+                var todayPlan = await _mealPlanRepository.GetTodaysMealPlan(userId);
+
+                if (todayPlan != null)
+                {
+                    var meals = await _mealPlanRepository.GetMealsForMealPlan(todayPlan.Id);
+
+                    var mealTypes = new Dictionary<int, string>
+                    {
+                        { 0, "BREAKFAST" },
+                        { 1, "LUNCH" },
+                        { 2, "DINNER" }
+                    };
+
+                    int index = 0;
+                    foreach (var meal in meals)
+                    {
+                        var mealType = mealTypes.ContainsKey(index) ? mealTypes[index] : "MEAL";
+                        var mealViewModel = MealViewModel.FromMeal(meal, mealType);
+                        mealViewModel.Ingredients = await _mealPlanRepository.GetIngredientsForMeal(meal.Id);
+                        GeneratedMeals.Add(mealViewModel);
+                        index++;
+                    }
+
+                    CalculateTotals();
+                    HasMeals = GeneratedMeals.Count > 0;
+                    StatusMessage = string.Empty;
+                }
+                else
+                {
+                    StatusMessage = "No meal plan found for today. Generate a new one!";
+                    HasMeals = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error loading meal plan: {ex.Message}";
+                HasMeals = false;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private void CalculateTotals()
+        {
+            TotalCalories = GeneratedMeals.Sum(m => m.Calories);
+            TotalProtein = GeneratedMeals.Sum(m => m.Protein);
+            TotalCarbs = GeneratedMeals.Sum(m => m.Carbs);
+            TotalFat = GeneratedMeals.Sum(m => m.Fat);
         }
     }
 }

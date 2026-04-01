@@ -2,6 +2,7 @@ using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TeamNut.Models;
+using TeamNut.Views.MealPlanView;
 
 namespace TeamNut.Views
 {
