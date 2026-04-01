@@ -68,6 +68,7 @@ namespace TeamNut.ViewModels
                 var registeredUser = await _userService.RegisterUserAsync(CurrentUser);
                 if (registeredUser != null)
                 {
+                    UserSession.Login(registeredUser.Id, registeredUser.Username, registeredUser.Role);
                     LoginSuccess?.Invoke(this, EventArgs.Empty);
                 }
             }
@@ -97,6 +98,7 @@ namespace TeamNut.ViewModels
             CurrentUserData.UserId = registeredUser.Id;
             await _userService.AddUserDataAsync(CurrentUserData);
 
+            UserSession.Login(registeredUser.Id, registeredUser.Username, registeredUser.Role);
             SaveDataSuccess?.Invoke(this, EventArgs.Empty);
         }
 
@@ -116,6 +118,7 @@ namespace TeamNut.ViewModels
 
             if (user != null)
             {
+                UserSession.Login(user.Id, user.Username, user.Role);
                 LoginSuccess?.Invoke(this, EventArgs.Empty);
             }
             else
