@@ -16,6 +16,15 @@ namespace TeamNut.ViewModels
         [ObservableProperty]
         private ObservableCollection<ShoppingItem> items = new ObservableCollection<ShoppingItem>();
 
+        [ObservableProperty]
+        private string statusMessage;
+
+        [ObservableProperty]
+        private bool isStatusVisible;
+
+        [ObservableProperty]
+        private bool isError;
+
         public ShoppingListViewModel()
         {
             _shoppingListService = new ShoppingListService();
@@ -55,10 +64,16 @@ namespace TeamNut.ViewModels
                     {
                         if (e.PropertyName == nameof(ShoppingItem.IsChecked))
                         {
-                            await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
+                            bool updated =  await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
+                            if (!updated) ShowStatus("Failed to save checkmark state.", true);
                         }
                     };
                     Items.Add(addedItem);
+                    ShowStatus($"Added '{itemName}' successfully!", false);
+                }
+                else
+                {
+                    ShowStatus("Database error: Could not add item.", true);
                 }
             }
         }
@@ -72,8 +87,26 @@ namespace TeamNut.ViewModels
                 if (success)
                 {
                     Items.Remove(item);
+                    ShowStatus("Item removed.", false);
+                }
+                else
+                {
+                    ShowStatus("Failed to delete item from database.", true);
                 }
             }
+        }
+
+        private void ShowStatus(string message, bool error)
+        {
+            StatusMessage = message;
+            IsError = error;
+            IsStatusVisible = true;
+            
+            // Auto hide after 3 seconds
+            Task.Delay(3000).ContinueWith(_ =>
+            {
+                IsStatusVisible = false;
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
 }
