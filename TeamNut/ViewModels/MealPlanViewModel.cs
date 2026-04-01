@@ -24,6 +24,13 @@ namespace TeamNut.ModelViews
         [ObservableProperty]
         private ObservableCollection<MealViewModel> generatedMeals = new();
 
+        private int _currentMealPlanId;
+        public int CurrentMealPlanId
+        {
+            get => _currentMealPlanId;
+            set => SetProperty(ref _currentMealPlanId, value);
+        }
+
         private int _totalCalories;
         public int TotalCalories
         {
@@ -172,6 +179,9 @@ namespace TeamNut.ModelViews
         {
             try
             {
+                // Store the current meal plan ID
+                CurrentMealPlanId = mealPlanId;
+
                 // Get the user's goal
                 string userGoal = await _mealPlanService.GetUserGoalAsync(userId);
 
@@ -270,6 +280,41 @@ namespace TeamNut.ModelViews
             TotalProtein = GeneratedMeals.Sum(m => m.Protein);
             TotalCarbs = GeneratedMeals.Sum(m => m.Carbs);
             TotalFat = GeneratedMeals.Sum(m => m.Fat);
+        }
+
+        [RelayCommand]
+        private async Task SaveToDailyLog()
+        {
+            try
+            {
+                if (CurrentMealPlanId <= 0)
+                {
+                    ErrorDialogTitle = "No Meal Plan";
+                    ErrorDialogMessage = "No meal plan is currently loaded. Please generate a meal plan first.";
+                    ShowErrorDialog = true;
+                    return;
+                }
+
+                await _mealPlanService.SaveToDailyLogAsync(CurrentMealPlanId, TotalCalories);
+
+                StatusMessage = $"Meal plan saved to daily log! (ID: {CurrentMealPlanId}, Calories: {TotalCalories})";
+            }
+            catch (Exception ex)
+            {
+                ErrorDialogTitle = "Save Failed";
+                ErrorDialogMessage = $"Failed to save to daily log:\n\n{ex.Message}";
+                ShowErrorDialog = true;
+            }
+        }
+
+        public async Task SaveToDailyLogAsync()
+        {
+            if (CurrentMealPlanId <= 0)
+            {
+                throw new InvalidOperationException("No meal plan is currently loaded. Please generate a meal plan first.");
+            }
+
+            await _mealPlanService.SaveToDailyLogAsync(CurrentMealPlanId, TotalCalories);
         }
     }
 }

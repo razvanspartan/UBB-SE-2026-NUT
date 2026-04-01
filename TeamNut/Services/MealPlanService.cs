@@ -241,5 +241,15 @@ namespace TeamNut.Services
                 return "maintenance";
             }
         }
+
+        /// <summary>
+        /// Saves the meal plan ID and total calories to the DailyLogs table
+        /// </summary>
+        /// <param name="mealPlanId">The meal plan ID</param>
+        /// <param name="totalCalories">The total calories of the meal plan</param>
+        public async Task SaveToDailyLogAsync(int mealPlanId, float totalCalories)
+        {
+            await _mealPlanRepository.SaveToDailyLog(mealPlanId, totalCalories);
+        }
     }
 }
