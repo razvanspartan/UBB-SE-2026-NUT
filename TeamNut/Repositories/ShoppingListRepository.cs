@@ -15,12 +15,13 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = @"INSERT INTO ShoppingItems (user_id, ingredient_id, is_checked)
-                             VALUES (@userId, @ingredientId, @isChecked)";
+            string query = @"INSERT INTO ShoppingItems (user_id, ingredient_id, quantity_grams, is_checked)
+                             VALUES (@userId, @ingredientId, @quantityGrams, @isChecked)";
 
             using var cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@userId", item.UserId);
             cmd.Parameters.AddWithValue("@ingredientId", item.IngredientId);
+            cmd.Parameters.AddWithValue("@quantityGrams", item.QuantityGrams);
             cmd.Parameters.AddWithValue("@isChecked", item.IsChecked ? 1 : 0);
 
             await cmd.ExecuteNonQueryAsync();
@@ -33,7 +34,7 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.is_checked, i.name AS ingredient_name 
+            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.quantity_grams, s.is_checked, i.name AS ingredient_name 
                              FROM ShoppingItems s 
                              JOIN Ingredients i ON s.ingredient_id = i.food_id";
 
@@ -53,7 +54,7 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.is_checked, i.name AS ingredient_name 
+            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.quantity_grams, s.is_checked, i.name AS ingredient_name 
                              FROM ShoppingItems s 
                              JOIN Ingredients i ON s.ingredient_id = i.food_id
                              WHERE s.id = @id";
@@ -78,7 +79,7 @@ namespace TeamNut.Repositories
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.is_checked, i.name AS ingredient_name 
+            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.quantity_grams, s.is_checked, i.name AS ingredient_name 
                              FROM ShoppingItems s 
                              JOIN Ingredients i ON s.ingredient_id = i.food_id
                              WHERE s.user_id = @userId";
@@ -102,12 +103,13 @@ namespace TeamNut.Repositories
             await conn.OpenAsync();
 
             string query = @"UPDATE ShoppingItems 
-                             SET ingredient_id = @ingredientId, is_checked = @isChecked
+                             SET ingredient_id = @ingredientId, quantity_grams = @quantityGrams, is_checked = @isChecked
                              WHERE id = @id";
 
             using var cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@id", item.Id);
             cmd.Parameters.AddWithValue("@ingredientId", item.IngredientId);
+            cmd.Parameters.AddWithValue("@quantityGrams", item.QuantityGrams);
             cmd.Parameters.AddWithValue("@isChecked", item.IsChecked ? 1 : 0);
 
             await cmd.ExecuteNonQueryAsync();
@@ -126,6 +128,36 @@ namespace TeamNut.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        public async Task<int> GenerateFromMealPlanAsync(int userId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"
+                INSERT INTO ShoppingItems (user_id, ingredient_id, quantity_grams, is_checked)
+                SELECT @userId, mi.food_id, SUM(mi.quantity), 0
+                FROM MealPlan mp
+                JOIN MealPlanMeal mpm ON mp.mealplan_id = mpm.mealPlanId
+                JOIN MealsIngredients mi ON mpm.mealId = mi.meal_id
+                WHERE mp.user_id = @userId 
+                  AND mp.created_at >= CAST(GETDATE() AS DATE)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM Inventory inv 
+                      WHERE inv.user_id = @userId AND inv.ingredient_id = mi.food_id
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM ShoppingItems si 
+                      WHERE si.user_id = @userId AND si.ingredient_id = mi.food_id
+                  )
+                GROUP BY mi.food_id";
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            
+            int rowsInserted = await cmd.ExecuteNonQueryAsync();
+            return rowsInserted;
+        }
+
         private ShoppingItem MapReaderToItem(SqlDataReader reader)
         {
             return new ShoppingItem
@@ -133,6 +165,7 @@ namespace TeamNut.Repositories
                 Id = Convert.ToInt32(reader["id"]),
                 UserId = Convert.ToInt32(reader["user_id"]),
                 IngredientId = Convert.ToInt32(reader["ingredient_id"]),
+                QuantityGrams = Convert.ToDouble(reader["quantity_grams"]),
                 IngredientName = reader["ingredient_name"].ToString(),
                 IsChecked = Convert.ToBoolean(reader["is_checked"])
             };

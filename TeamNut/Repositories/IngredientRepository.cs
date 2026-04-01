@@ -31,5 +31,25 @@ namespace TeamNut.Repositories
             var newId = await insertCmd.ExecuteScalarAsync();
             return Convert.ToInt32(newId);
         }
+        public async Task<System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, string>>> SearchIngredientsAsync(string query)
+        {
+            var results = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, string>>();
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string selectQuery = "SELECT TOP 10 food_id, name FROM Ingredients WHERE name LIKE '%' + @query + '%'";
+            using var selectCmd = new SqlCommand(selectQuery, conn);
+            selectCmd.Parameters.AddWithValue("@query", query);
+
+            using var reader = await selectCmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                results.Add(new System.Collections.Generic.KeyValuePair<int, string>(
+                    Convert.ToInt32(reader["food_id"]),
+                    reader["name"].ToString()
+                ));
+            }
+            return results;
+        }
     }
 }

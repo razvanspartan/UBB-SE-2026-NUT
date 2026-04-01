@@ -156,6 +156,7 @@ CREATE TABLE ShoppingItems (
     id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT,
     ingredient_id INT,
+    quantity_grams FLOAT DEFAULT 0,
     is_checked BIT DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (ingredient_id) REFERENCES Ingredients(food_id) ON DELETE CASCADE

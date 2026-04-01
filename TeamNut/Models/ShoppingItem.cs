@@ -12,6 +12,9 @@ namespace TeamNut.Models
         private string ingredientName;
 
         [ObservableProperty]
+        private double quantityGrams;
+
+        [ObservableProperty]
         private bool isChecked;
     }
 }

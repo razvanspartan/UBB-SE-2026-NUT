@@ -79,7 +79,25 @@ namespace TeamNut.ViewModels
         }
 
         [RelayCommand]
-        public async Task DeleteItem(ShoppingItem item)
+        public async Task MoveToPantry(ShoppingItem item)
+        {
+            if (item != null && Items.Contains(item))
+            {
+                bool success = await _shoppingListService.MoveToPantryAsync(item);
+                if (success)
+                {
+                    Items.Remove(item);
+                    ShowStatus($"Moved '{item.IngredientName}' to Pantry.", false);
+                }
+                else
+                {
+                    ShowStatus("Failed to move item to Pantry.", true);
+                }
+            }
+        }
+
+        [RelayCommand]
+        public async Task RemoveItem(ShoppingItem item)
         {
             if (item != null && Items.Contains(item))
             {
@@ -87,13 +105,40 @@ namespace TeamNut.ViewModels
                 if (success)
                 {
                     Items.Remove(item);
-                    ShowStatus("Item removed.", false);
+                    ShowStatus("Item removed from list.", false);
                 }
                 else
                 {
                     ShowStatus("Failed to delete item from database.", true);
                 }
             }
+        }
+
+        [RelayCommand]
+        public async Task GenerateList()
+        {
+            if (UserSession.UserId != null)
+            {
+                int itemsAdded = await _shoppingListService.GenerateListAsync(UserSession.UserId.Value);
+                if (itemsAdded > 0)
+                {
+                    await LoadItemsAsync();
+                    ShowStatus($"Successfully generated {itemsAdded} new items from your Meal Plan!", false);
+                }
+                else if (itemsAdded == 0)
+                {
+                    ShowStatus("you already have everything you need", false);
+                }
+                else
+                {
+                    ShowStatus("Error analyzing Meal Plan for ingredients.", true);
+                }
+            }
+        }
+
+        public async Task<System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, string>>> SearchIngredientsAsync(string query)
+        {
+            return await _shoppingListService.SearchIngredientsAsync(query);
         }
 
         private void ShowStatus(string message, bool error)
