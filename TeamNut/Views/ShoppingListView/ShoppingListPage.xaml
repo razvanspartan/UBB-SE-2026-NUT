@@ -49,23 +49,36 @@
                 Padding="16" 
                 Margin="0,0,0,24">
             
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <AutoSuggestBox x:Name="IngredientSearchBox" 
-                         PlaceholderText="Search for an ingredient..." 
-                         VerticalAlignment="Center" 
-                         Margin="0,0,16,0"
-                         TextChanged="IngredientSearchBox_TextChanged"
-                         SuggestionChosen="IngredientSearchBox_SuggestionChosen"/>
-                <Button Grid.Column="1" 
-                        Content="Add to list" 
-                        Style="{StaticResource AccentButtonStyle}" 
-                        Click="AddButton_Click"/>
-            </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <AutoSuggestBox x:Name="IngredientSearchBox" 
+                              PlaceholderText="Search for an ingredient..." 
+                              VerticalAlignment="Center" 
+                              Margin="0,0,16,0"
+                              TextChanged="IngredientSearchBox_TextChanged"
+                              SuggestionChosen="IngredientSearchBox_SuggestionChosen"/>
+
+                    <NumberBox Grid.Column="1" 
+                              Value="{x:Bind ViewModel.PendingQuantity, Mode=TwoWay}"
+                              Minimum="1"
+                              SpinButtonPlacementMode="Compact"
+                              Width="100"
+                              Header="Qty (g)"
+                              VerticalAlignment="Center"
+                              Margin="0,0,16,0"/>
+
+                    <Button Grid.Column="3" 
+                            Content="Add to list" 
+                            Style="{StaticResource AccentButtonStyle}" 
+                            Click="AddButton_Click"
+                            VerticalAlignment="Bottom"/>
+                </Grid>
         </Border>
 
         <!-- List View -->
@@ -98,11 +111,13 @@
 
                             <!-- Grams -->
                             <TextBlock Grid.Column="1" 
-                                       Text="{x:Bind QuantityGrams, Mode=OneWay}" 
                                        VerticalAlignment="Center" 
                                        Foreground="Gray"
                                        Margin="16,0,0,0"
-                                       FontSize="14"/>
+                                       FontSize="14">
+                                <Run Text="{x:Bind QuantityGrams, Mode=OneWay}"/>
+                                <Run Text=" g"/>
+                            </TextBlock>
                             
                             <!-- Pantry Components -->
                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">

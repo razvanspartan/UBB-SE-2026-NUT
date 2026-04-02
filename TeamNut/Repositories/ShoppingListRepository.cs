@@ -72,6 +72,30 @@ namespace TeamNut.Repositories
             return null;
         }
 
+        public async Task<ShoppingItem> GetByUserAndIngredient(int userId, int ingredientId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"SELECT s.id, s.user_id, s.ingredient_id, s.quantity_grams, s.is_checked, i.name AS ingredient_name 
+                             FROM ShoppingItems s 
+                             JOIN Ingredients i ON s.ingredient_id = i.food_id
+                             WHERE s.user_id = @userId AND s.ingredient_id = @ingredientId";
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@ingredientId", ingredientId);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return MapReaderToItem(reader);
+            }
+
+            return null;
+        }
+
         public async Task<List<ShoppingItem>> GetAllByUserId(int userId)
         {
             var items = new List<ShoppingItem>();
@@ -128,34 +152,38 @@ namespace TeamNut.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task<int> GenerateFromMealPlanAsync(int userId)
+        public async Task<List<ShoppingItem>> GetIngredientsNeededFromMealPlan(int userId)
         {
+            var items = new List<ShoppingItem>();
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
+            // We aggregate by ingredient_id for today's meal plan onwards
             string query = @"
-                INSERT INTO ShoppingItems (user_id, ingredient_id, quantity_grams, is_checked)
-                SELECT @userId, mi.food_id, SUM(mi.quantity), 0
+                SELECT mi.food_id as ingredient_id, i.name as ingredient_name, SUM(mi.quantity) as quantity_grams
                 FROM MealPlan mp
                 JOIN MealPlanMeal mpm ON mp.mealplan_id = mpm.mealPlanId
                 JOIN MealsIngredients mi ON mpm.mealId = mi.meal_id
+                JOIN Ingredients i ON mi.food_id = i.food_id
                 WHERE mp.user_id = @userId 
                   AND mp.created_at >= CAST(GETDATE() AS DATE)
-                  AND NOT EXISTS (
-                      SELECT 1 FROM Inventory inv 
-                      WHERE inv.user_id = @userId AND inv.ingredient_id = mi.food_id
-                  )
-                  AND NOT EXISTS (
-                      SELECT 1 FROM ShoppingItems si 
-                      WHERE si.user_id = @userId AND si.ingredient_id = mi.food_id
-                  )
-                GROUP BY mi.food_id";
+                GROUP BY mi.food_id, i.name";
 
             using var cmd = new SqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@userId", userId);
-            
-            int rowsInserted = await cmd.ExecuteNonQueryAsync();
-            return rowsInserted;
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                items.Add(new ShoppingItem
+                {
+                    UserId = userId,
+                    IngredientId = Convert.ToInt32(reader["ingredient_id"]),
+                    IngredientName = reader["ingredient_name"].ToString(),
+                    QuantityGrams = Convert.ToDouble(reader["quantity_grams"])
+                });
+            }
+            return items;
         }
 
         private ShoppingItem MapReaderToItem(SqlDataReader reader)

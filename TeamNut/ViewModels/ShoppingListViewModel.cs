@@ -25,6 +25,9 @@ namespace TeamNut.ViewModels
         [ObservableProperty]
         private bool isError;
 
+        [ObservableProperty]
+        private double pendingQuantity = 100; // Default to 100g
+
         public ShoppingListViewModel()
         {
             _shoppingListService = new ShoppingListService();
@@ -57,19 +60,32 @@ namespace TeamNut.ViewModels
         {
             if (!string.IsNullOrWhiteSpace(itemName) && UserSession.UserId != null)
             {
-                var addedItem = await _shoppingListService.AddItemAsync(itemName.Trim(), UserSession.UserId.Value);
+                var addedItem = await _shoppingListService.AddItemAsync(itemName.Trim(), UserSession.UserId.Value, PendingQuantity);
                 if (addedItem != null)
                 {
-                    addedItem.PropertyChanged += async (s, e) =>
+                    // Check if item is already in the observable collection (Upsert case)
+                    var existing = System.Linq.Enumerable.FirstOrDefault(Items, i => i.Id == addedItem.Id);
+                    
+                    if (existing == null)
                     {
-                        if (e.PropertyName == nameof(ShoppingItem.IsChecked))
+                        addedItem.PropertyChanged += async (s, e) =>
                         {
-                            bool updated =  await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
-                            if (!updated) ShowStatus("Failed to save checkmark state.", true);
-                        }
-                    };
-                    Items.Add(addedItem);
-                    ShowStatus($"Added '{itemName}' successfully!", false);
+                            if (e.PropertyName == nameof(ShoppingItem.IsChecked))
+                            {
+                                bool updated = await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
+                                if (!updated) ShowStatus("Failed to save checkmark state.", true);
+                            }
+                        };
+                        Items.Add(addedItem);
+                    }
+                    else
+                    {
+                        // Update the existing UI object so the text reflects the new sum
+                        existing.QuantityGrams = addedItem.QuantityGrams;
+                    }
+
+                    ShowStatus($"Updated '{itemName}' successfully!", false);
+                    PendingQuantity = 100; // Reset to default
                 }
                 else
                 {

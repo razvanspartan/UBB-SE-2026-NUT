@@ -23,17 +23,27 @@ namespace TeamNut.Services
             return await _repository.GetAllByUserId(userId);
         }
 
-        public async Task<ShoppingItem> AddItemAsync(string itemName, int userId)
+        public async Task<ShoppingItem> AddItemAsync(string itemName, int userId, double quantity = 0)
         {
             try
             {
                 int ingredientId = await _ingredientRepository.GetOrCreateIngredientIdAsync(itemName);
+
+                // Check if already exists for this user
+                var existing = await _repository.GetByUserAndIngredient(userId, ingredientId);
+                if (existing != null)
+                {
+                    existing.QuantityGrams += quantity;
+                    await _repository.Update(existing);
+                    return existing;
+                }
 
                 var newItem = new ShoppingItem
                 {
                     UserId = userId,
                     IngredientId = ingredientId,
                     IngredientName = itemName,
+                    QuantityGrams = quantity,
                     IsChecked = false
                 };
 
@@ -100,7 +110,45 @@ namespace TeamNut.Services
         {
             try
             {
-                return await _repository.GenerateFromMealPlanAsync(userId);
+                // 1. Get what we need from Meal Plan
+                var neededIngredients = await _repository.GetIngredientsNeededFromMealPlan(userId);
+                if (!neededIngredients.Any()) return 0;
+
+                // 2. Get what we already have in Inventory
+                var inventory = (await _inventoryRepository.GetAllByUserId(userId)).ToList();
+
+                // 3. Get what is already in Shopping List
+                var currentList = await _repository.GetAllByUserId(userId);
+
+                int itemsAddedCount = 0;
+
+                foreach (var needed in neededIngredients)
+                {
+                    double totalNeeded = needed.QuantityGrams;
+
+                    // Subtract what we have in inventory
+                    var inStock = inventory.FirstOrDefault(i => i.IngredientId == needed.IngredientId);
+                    if (inStock != null)
+                    {
+                        totalNeeded -= inStock.QuantityGrams;
+                    }
+
+                    // Subtract what is already in shopping list
+                    var alreadyInList = currentList.FirstOrDefault(s => s.IngredientId == needed.IngredientId);
+                    if (alreadyInList != null)
+                    {
+                        totalNeeded -= alreadyInList.QuantityGrams;
+                    }
+
+                    // If we still need more, add/update it
+                    if (totalNeeded > 0)
+                    {
+                        await AddItemAsync(needed.IngredientName, userId, totalNeeded);
+                        itemsAddedCount++;
+                    }
+                }
+
+                return itemsAddedCount;
             }
             catch
             {
