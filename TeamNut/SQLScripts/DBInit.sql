@@ -1,4 +1,19 @@
 ﻿
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'NUTdb')
+BEGIN
+    CREATE DATABASE [NUTdb];
+END
+GO
+
+
+USE [NUTdb];
+GO
+
+
+
+
+
+
 DROP TABLE IF EXISTS Messages;
 DROP TABLE IF EXISTS Conversations;
 DROP TABLE IF EXISTS Reminders;
