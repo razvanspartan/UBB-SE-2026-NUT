@@ -5,7 +5,7 @@ using TeamNut.Models;
 using TeamNut.Repositories;
 using System.Linq;
 
-namespace TeamNut.Backend.Services
+namespace TeamNut.Services
 {
     public class InventoryService
     {
