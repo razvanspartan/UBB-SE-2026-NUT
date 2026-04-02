@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -10,6 +9,11 @@ namespace TeamNut.Repositories
     internal class IngredientRepository
     {
         private readonly string _connectionString = DbConfig.ConnectionString;
+
+        public async Task<int> GetOrCreateIngredientIdAsync(string name)
+        {
+            return await GetOrCreateIngredientIdByNameAsync(name);
+        }
 
         public async Task<int> GetOrCreateIngredientIdByNameAsync(string name)
         {
@@ -24,7 +28,7 @@ namespace TeamNut.Repositories
                 if (existing != null && existing != DBNull.Value)
                 {
                     return Convert.ToInt32(existing);
-            }
+                }
             }
 
             const string insertSql = @"INSERT INTO Ingredients (name, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g)
@@ -34,6 +38,31 @@ namespace TeamNut.Repositories
             insertCmd.Parameters.AddWithValue("@name", name);
             var id = await insertCmd.ExecuteScalarAsync();
             return Convert.ToInt32(id);
+        }
+
+        public async Task<List<KeyValuePair<int, string>>> SearchIngredientsAsync(string search)
+        {
+            var results = new List<KeyValuePair<int, string>>();
+
+            const string sql = @"SELECT TOP 20 food_id, name
+                                 FROM Ingredients
+                                 WHERE name LIKE @search
+                                 ORDER BY name";
+
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@search", $"%{search}%");
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                results.Add(new KeyValuePair<int, string>(
+                    Convert.ToInt32(reader["food_id"]),
+                    reader["name"]?.ToString() ?? string.Empty));
+            }
+
+            return results;
         }
 
         public async Task<List<Ingredient>> GetAllAsync()
@@ -50,7 +79,6 @@ namespace TeamNut.Repositories
             await conn.OpenAsync();
             using var reader = await cmd.ExecuteReaderAsync();
 
-            using var reader = await selectCmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
                 ingredients.Add(new Ingredient
@@ -65,7 +93,7 @@ namespace TeamNut.Repositories
             }
 
             return ingredients;
-            }
+        }
 
         private static double GetDoubleOrZero(SqlDataReader reader, string column)
         {

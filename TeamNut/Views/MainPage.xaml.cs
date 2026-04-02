@@ -10,7 +10,6 @@ namespace TeamNut.Views
     {
         private bool mealsLoaded = false;
         private bool mealPlanLoaded = false;
-        private bool inventoryLoaded = false;
         private bool chatLoaded = false;
         private bool shoppingListLoaded = false;
 
@@ -57,10 +56,9 @@ namespace TeamNut.Views
                 {
                     DailyLogFrame.Navigate(typeof(TeamNut.Views.CalorieLoggingView.CalorieLoggingPage));
                 }
-                else if (selectedItem == InventoryTab && !inventoryLoaded)
+                else if (selectedItem == InventoryTab)
                 {
                     InventoryFrame.Navigate(typeof(TeamNut.Views.InventoryView.InventoryPage));
-                    inventoryLoaded = true;
                 }
                 else if (selectedItem == ChatTab && !chatLoaded)
                 {
