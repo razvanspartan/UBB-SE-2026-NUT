@@ -11,6 +11,7 @@ namespace TeamNut.Views
         private bool mealsLoaded = false;
         private bool mealPlanLoaded = false;
         private bool chatLoaded = false;
+        private bool shoppingListLoaded = false;
 
         public MainPage()
         {
@@ -21,7 +22,6 @@ namespace TeamNut.Views
         {
             try
             {
-                // Load the first tab by default
                 if (!mealsLoaded && MealsFrame != null)
                 {
                     MealsFrame.Navigate(typeof(TeamNut.MealsPage));
@@ -55,10 +55,19 @@ namespace TeamNut.Views
                 {
                     DailyLogFrame.Navigate(typeof(TeamNut.Views.CalorieLoggingView.CalorieLoggingPage));
                 }
+                else if (selectedItem == InventoryTab)
+                {
+                    InventoryFrame.Navigate(typeof(TeamNut.Views.InventoryView.InventoryPage));
+                }
                 else if (selectedItem == ChatTab && !chatLoaded)
                 {
                     ChatFrame.Navigate(typeof(TeamNut.Views.NutritionistChat.NutritionistChatPage));
                     chatLoaded = true;
+                }
+                else if (selectedItem == ShoppingListTab && !shoppingListLoaded)
+                {
+                    ShoppingListFrame.Navigate(typeof(TeamNut.Views.ShoppingListView.ShoppingListPage));
+                    shoppingListLoaded = true;
                 }
             }
             catch (Exception ex)

@@ -14,8 +14,12 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+<<<<<<< HEAD
         <!-- Messages list bound to ViewModel -->
         <ListView x:Name="MessagesList" Grid.Row="0" ItemsSource="{Binding Messages}">
+=======
+        <ListView x:Name="MessagesList" Grid.Row="0">
+>>>>>>> 5a10dfdde5d3e010faf0819c0b41fce1334303ad
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Margin="0,6">
@@ -27,7 +31,6 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <!-- Input area - will be wired to commands in the viewmodel task -->
         <Grid Grid.Row="1" Margin="0,8,0,0" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />

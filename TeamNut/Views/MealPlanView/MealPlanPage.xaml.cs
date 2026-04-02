@@ -1,9 +1,10 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using TeamNut.ModelViews;
 using TeamNut.Models;
 using TeamNut.Services;
+using TeamNut.ViewModels;
 
 namespace TeamNut.Views.MealPlanView
 {
@@ -18,7 +19,6 @@ namespace TeamNut.Views.MealPlanView
             this.DataContext = ViewModel;
             _userService = new UserService();
 
-            // Subscribe to property changes to update UI
             ViewModel.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(ViewModel.StatusMessage))
@@ -43,7 +43,6 @@ namespace TeamNut.Views.MealPlanView
                 }
             };
 
-            // Listen for changes to the collection
             ViewModel.GeneratedMeals.CollectionChanged += (s, e) =>
             {
                 UpdateMealsList();
@@ -67,7 +66,6 @@ namespace TeamNut.Views.MealPlanView
                 return;
             }
 
-            // Get current user data
             var userData = await _userService.GetUserDataAsync(userId.Value);
 
             if (userData == null)
@@ -83,7 +81,6 @@ namespace TeamNut.Views.MealPlanView
                 return;
             }
 
-            // Create the settings dialog
             await ShowSettingsDialog(userData);
         }
 
@@ -98,10 +95,8 @@ namespace TeamNut.Views.MealPlanView
                 XamlRoot = this.XamlRoot
             };
 
-            // Create the form
             var stackPanel = new StackPanel { Spacing = 15 };
 
-            // Weight
             var weightBox = new NumberBox
             {
                 Header = "Weight (kg)",
@@ -112,7 +107,6 @@ namespace TeamNut.Views.MealPlanView
             };
             stackPanel.Children.Add(weightBox);
 
-            // Height
             var heightBox = new NumberBox
             {
                 Header = "Height (cm)",
@@ -123,7 +117,6 @@ namespace TeamNut.Views.MealPlanView
             };
             stackPanel.Children.Add(heightBox);
 
-            // Gender
             var genderCombo = new ComboBox
             {
                 Header = "Gender",
@@ -134,7 +127,6 @@ namespace TeamNut.Views.MealPlanView
             genderCombo.Items.Add("Female");
             stackPanel.Children.Add(genderCombo);
 
-            // Goal
             var goalCombo = new ComboBox
             {
                 Header = "Goal",
@@ -155,7 +147,6 @@ namespace TeamNut.Views.MealPlanView
             };
             stackPanel.Children.Add(goalCombo);
 
-            // Info text
             var infoText = new TextBlock
             {
                 Text = "Changes will be reflected in your next meal plan generation.",
@@ -172,7 +163,6 @@ namespace TeamNut.Views.MealPlanView
 
             if (result == ContentDialogResult.Primary)
             {
-                // Validate and save
                 if (weightBox.Value < 1 || heightBox.Value < 1)
                 {
                     var validationDialog = new ContentDialog
@@ -186,13 +176,11 @@ namespace TeamNut.Views.MealPlanView
                     return;
                 }
 
-                // Update user data
                 userData.Weight = (int)weightBox.Value;
                 userData.Height = (int)heightBox.Value;
                 userData.Gender = genderCombo.SelectedIndex == 0 ? "male" : "female";
                 userData.Goal = goalCombo.SelectedItem.ToString().ToLower();
 
-                // Recalculate nutritional needs
                 userData.Bmi = userData.CalculateBmi();
                 userData.CalorieNeeds = userData.CalculateCalorieNeeds();
                 userData.ProteinNeeds = userData.CalculateProteinNeeds();
@@ -212,8 +200,6 @@ namespace TeamNut.Views.MealPlanView
                     };
                     _ = await successDialog.ShowAsync();
 
-                    // Don't clear meals - today's plan stays the same
-                    // The new settings will be used for tomorrow's auto-generated plan
                     StatusMessageText.Text = "Settings saved! New preferences will apply to tomorrow's meal plan.";
                 }
                 catch (Exception ex)
@@ -281,11 +267,10 @@ namespace TeamNut.Views.MealPlanView
 
                 await ViewModel.SaveToDailyLogAsync();
 
-                // Build a detailed message showing all saved meals
                 var messageText = $"Successfully saved {ViewModel.GeneratedMeals.Count} meals to daily log:\n\n";
                 foreach (var meal in ViewModel.GeneratedMeals)
                 {
-                    messageText += $"• {meal.Name}: {meal.Calories} kcal\n";
+                    messageText += $"� {meal.Name}: {meal.Calories} kcal\n";
                 }
 
                 var successDialog = new ContentDialog

@@ -20,7 +20,6 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Left -->
                 <StackPanel Orientation="Horizontal"
                             VerticalAlignment="Center"
                             Spacing="15">
@@ -29,13 +28,8 @@
                                FontSize="24"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"/>
-
-                    <Button Content="Meals"
-                            VerticalAlignment="Center"
-                            Click="MealsButton_Click"/>
                 </StackPanel>
 
-                <!-- Right -->
                 <Button Grid.Column="1"
                         Content="Logout"
                         VerticalAlignment="Center"
@@ -65,8 +59,16 @@
                     <Frame x:Name="DailyLogFrame"/>
                 </TabViewItem>
 
+                <TabViewItem Header="Inventory" IsClosable="False" x:Name="InventoryTab">
+                    <Frame x:Name="InventoryFrame"/>
+                </TabViewItem>
+
                 <TabViewItem Header="Nutritionist Chat" IsClosable="False" x:Name="ChatTab">
                     <Frame x:Name="ChatFrame"/>
+                </TabViewItem>
+
+                <TabViewItem Header="Shopping List" IsClosable="False" x:Name="ShoppingListTab">
+                    <Frame x:Name="ShoppingListFrame"/>
                 </TabViewItem>
             </TabView.TabItems>
         </TabView>
