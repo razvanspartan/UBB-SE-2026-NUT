@@ -56,6 +56,10 @@ namespace TeamNut.Views
                 {
                     DailyLogFrame.Navigate(typeof(TeamNut.Views.CalorieLoggingView.CalorieLoggingPage));
                 }
+                else if (selectedItem == InventoryTab)
+                {
+                    InventoryFrame.Navigate(typeof(TeamNut.Views.InventoryView.InventoryPage));
+                }
                 else if (selectedItem == ChatTab && !chatLoaded)
                 {
                     ChatFrame.Navigate(typeof(TeamNut.Views.NutritionistChat.NutritionistChatPage));

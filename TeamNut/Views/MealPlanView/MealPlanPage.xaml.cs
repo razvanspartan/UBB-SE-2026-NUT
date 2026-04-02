@@ -4,6 +4,7 @@ using System;
 using TeamNut.ModelViews;
 using TeamNut.Models;
 using TeamNut.Services;
+using TeamNut.ViewModels;
 
 namespace TeamNut.Views.MealPlanView
 {

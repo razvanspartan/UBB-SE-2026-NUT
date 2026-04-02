@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TeamNut.Repositories; 
 using TeamNut.Models;
+using TeamNut.Views.MealPlanView;
 
 namespace TeamNut.Repositories
 {
@@ -427,9 +428,9 @@ namespace TeamNut.Repositories
             return meals;
         }
 
-        public async Task<List<Views.MealPlanView.IngredientViewModel>> GetIngredientsForMeal(int mealId)
+        public async Task<List<IngredientViewModel>> GetIngredientsForMeal(int mealId)
         {
-            var ingredients = new List<Views.MealPlanView.IngredientViewModel>();
+            var ingredients = new List<IngredientViewModel>();
             using var conn = new SqlConnection(_connectionString);
 
             const string sql = @"
@@ -461,7 +462,7 @@ namespace TeamNut.Repositories
                 double carbsPer100g = Convert.ToDouble(reader["carbs_per_100g"]);
                 double fatPer100g = Convert.ToDouble(reader["fat_per_100g"]);
 
-                ingredients.Add(new Views.MealPlanView.IngredientViewModel
+                ingredients.Add(new TeamNut.Views.MealPlanView.IngredientViewModel
                 {
                     IngredientId = ingredientId,
                     Name = reader["name"].ToString(),
