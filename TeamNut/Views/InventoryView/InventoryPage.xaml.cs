@@ -20,5 +20,13 @@ namespace TeamNut.Views.InventoryView
             base.OnNavigatedTo(e);
             _ = ViewModel.LoadInventoryAsync();
         }
+
+        private void IngredientSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            if (args.SelectedItem is Ingredient ingredient)
+            {
+                ViewModel.SelectedIngredient = ingredient;
+            }
+        }
     }
 }

@@ -11,11 +11,13 @@ namespace TeamNut.Services
     {
         private readonly InventoryRepository _inventoryRepository;
         private readonly MealPlanRepository _mealPlanRepository;
+        private readonly IngredientRepository _ingredientRepository;
 
         public InventoryService()
         {
             _inventoryRepository = new InventoryRepository();
             _mealPlanRepository = new MealPlanRepository();
+            _ingredientRepository = new IngredientRepository();
         }
 
         /// <summary>
@@ -70,6 +72,12 @@ namespace TeamNut.Services
             await _inventoryRepository.Add(newItem);
         }
 
+        public async Task AddIngredientByNameToPantry(int userId, string ingredientName)
+        {
+            int ingredientId = await _ingredientRepository.GetOrCreateIngredientIdByNameAsync(ingredientName);
+            await AddToPantry(userId, ingredientId, 100);
+        }
+
         /// <summary>
         /// Fetches all items for the "Inventory" tab display
         /// </summary>
@@ -84,6 +92,11 @@ namespace TeamNut.Services
         public async Task RemoveItem(int inventoryId)
         {
             await _inventoryRepository.Delete(inventoryId);
+        }
+
+        public async Task<IEnumerable<Ingredient>> GetAllIngredients()
+        {
+            return await _ingredientRepository.GetAllAsync();
         }
     }
 }

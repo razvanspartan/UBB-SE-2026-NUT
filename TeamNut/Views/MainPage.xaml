@@ -29,10 +29,6 @@
                                FontSize="24"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"/>
-
-                    <Button Content="Meals"
-                            VerticalAlignment="Center"
-                            Click="MealsButton_Click"/>
                 </StackPanel>
 
                 <!-- Right -->
@@ -63,6 +59,10 @@
 
                 <TabViewItem Header="Daily Logs" IsClosable="False" x:Name="DailyLogTab">
                     <Frame x:Name="DailyLogFrame"/>
+                </TabViewItem>
+
+                <TabViewItem Header="Inventory" IsClosable="False" x:Name="InventoryTab">
+                    <Frame x:Name="InventoryFrame"/>
                 </TabViewItem>
 
                 <TabViewItem Header="Nutritionist Chat" IsClosable="False" x:Name="ChatTab">
