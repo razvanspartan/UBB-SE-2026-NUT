@@ -1,10 +1,10 @@
-using Microsoft.Data.SqlClient;
+//using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using TeamNut.Models;
-
+/*
 namespace TeamNut.Repositories
 {
     internal class InventoryRepository : IRepository<Inventory>
@@ -109,3 +109,4 @@ namespace TeamNut.Repositories
         }
     }
 }
+*/

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TeamNut.Models;
-
+/*
 namespace TeamNut.Services
 {
     public class ShoppingListService
@@ -150,3 +150,4 @@ namespace TeamNut.Services
         }
     }
 }
+*/

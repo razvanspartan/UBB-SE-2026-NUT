@@ -1,8 +1,8 @@
-using Microsoft.Data.SqlClient;
+//using Microsoft.Data.SqlClient;
 using System;
 using System.Threading.Tasks;
 using TeamNut.Models;
-
+/*
 namespace TeamNut.Repositories
 {
     public class DailyLogRepository
@@ -11,37 +11,37 @@ namespace TeamNut.Repositories
 
         public async Task Add(DailyLog log)
         {
-            using var conn = new SqlConnection(_connectionString);
-            await conn.OpenAsync();
+            //using var conn = new SqlConnection(_connectionString);
+           // await conn.OpenAsync();
 
             const string query = @"INSERT INTO DailyLogs (user_id, mealId, calories, created_at)
                                    VALUES (@userId, @mealId, @calories, @loggedAt)";
 
-            using var cmd = new SqlCommand(query, conn);
-            cmd.Parameters.AddWithValue("@userId", log.UserId);
-            cmd.Parameters.AddWithValue("@mealId", log.MealId);
-            cmd.Parameters.AddWithValue("@calories", log.Calories);
-            cmd.Parameters.AddWithValue("@loggedAt", log.LoggedAt);
+            //using var cmd = new SqlCommand(query, conn);
+            //cmd.Parameters.AddWithValue("@userId", log.UserId);
+           // cmd.Parameters.AddWithValue("@mealId", log.MealId);
+            //cmd.Parameters.AddWithValue("@calories", log.Calories);
+            //cmd.Parameters.AddWithValue("@loggedAt", log.LoggedAt);
 
-            await cmd.ExecuteNonQueryAsync();
-        }
+           // await cmd.ExecuteNonQueryAsync();
+       // }
+       */
+        //public async Task<bool> HasAnyLogs(int userId)
+        //{
+          //  using var conn = new SqlConnection(_connectionString);
+           // await conn.OpenAsync();
 
-        public async Task<bool> HasAnyLogs(int userId)
-        {
-            using var conn = new SqlConnection(_connectionString);
-            await conn.OpenAsync();
+           // const string query = "SELECT COUNT(1) FROM DailyLogs WHERE user_id = @userId";
+           // using var cmd = new SqlCommand(query, conn);
+            //cmd.Parameters.AddWithValue("@userId", userId);
 
-            const string query = "SELECT COUNT(1) FROM DailyLogs WHERE user_id = @userId";
-            using var cmd = new SqlCommand(query, conn);
-            cmd.Parameters.AddWithValue("@userId", userId);
-
-            var count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-            return count > 0;
-        }
-
+           // var count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+           // return count > 0;
+        //}
+        /*
         public async Task<DailyLog> GetNutritionTotalsForRange(int userId, DateTime startInclusive, DateTime endExclusive)
         {
-            using var conn = new SqlConnection(_connectionString);
+            //using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
             const string query = @"
@@ -85,3 +85,4 @@ namespace TeamNut.Repositories
         }
     }
 }
+*/
