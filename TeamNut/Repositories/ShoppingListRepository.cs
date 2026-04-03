@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Data.SqlClient;
+//using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
 using TeamNut.Models;
-
+/*
 namespace TeamNut.Repositories
 {
     public class ShoppingListRepository : IRepository<ShoppingItem>
@@ -198,4 +198,4 @@ namespace TeamNut.Repositories
             };
         }
     }
-}
+}*/

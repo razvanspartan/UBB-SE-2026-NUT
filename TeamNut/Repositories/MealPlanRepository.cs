@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+//using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using TeamNut.Repositories; 
 using TeamNut.Models;
 using TeamNut.Views.MealPlanView;
-
+/*
 namespace TeamNut.Repositories
 {
     internal class MealPlanRepository : IRepository<MealPlan>
@@ -524,3 +524,5 @@ namespace TeamNut.Repositories
         }
     }
 }
+
+*/
