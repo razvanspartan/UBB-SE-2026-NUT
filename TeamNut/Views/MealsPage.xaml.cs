@@ -19,13 +19,13 @@ namespace TeamNut
         {
             this.InitializeComponent();
             viewModel = new MealSearchViewModel();
-            // Start the page by showing all meals
+            
             Loaded += (s, e) => btnSearch_Click(this, new RoutedEventArgs());
         }
 
         private async void btnSearch_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Capture ALL the checkboxes into the filter object
+           
             var filter = new MealFilter
             {
                 SearchTerm = txtSearch.Text ?? "",
@@ -34,10 +34,10 @@ namespace TeamNut
                 IsGlutenFree = chkGlutenFree?.IsChecked == true,
                 IsLactoseFree = chkLactoseFree?.IsChecked == true,
                 IsNutFree = chkNutFree?.IsChecked == true,
-                IsFavoriteOnly = chkFavorites?.IsChecked == true // Tell the DB if we only want favorites
+                IsFavoriteOnly = chkFavorites?.IsChecked == true 
             };
 
-            // 2. This calls the ViewModel, which calls the Service, which calls your "Clean" SQL
+           
             var results = await viewModel.SearchMealsAsync(filter);
 
             allMeals = results.ToList();
@@ -68,15 +68,13 @@ namespace TeamNut
         {
             if (sender is Button btn && btn.DataContext is Meal meal)
             {
-                // 1. Flip the True/False value. 
-                // This automatically triggers 'OnIsFavoriteChanged' in your Meal.cs model!
+                
                 meal.IsFavorite = !meal.IsFavorite;
 
-                // 2. Save the change to the database
+                
                 await viewModel.ToggleFavoriteAsync(meal);
 
-                // 3. Special case: If the "Show Favorites" checkbox is ON, 
-                // and we just un-favorited this meal, remove it from the screen.
+                
                 if (chkFavorites?.IsChecked == true && !meal.IsFavorite)
                 {
                     allMeals.Remove(meal);
@@ -85,7 +83,7 @@ namespace TeamNut
             }
         }
 
-        // --- Keep the rest of your methods (listMeals_ItemClick, Prev_Click, etc.) exactly as they are ---
+        
 
         private async void listMeals_ItemClick(object sender, ItemClickEventArgs e)
         {

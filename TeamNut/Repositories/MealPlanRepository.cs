@@ -101,6 +101,80 @@ namespace TeamNut.Repositories
 
             try
             {
+               
+
+                const string checkMealsSql = "SELECT COUNT(*) FROM Meals";
+                using var checkCmd = new SqliteCommand(checkMealsSql, conn, transaction);
+                long mealCount = (long)await checkCmd.ExecuteScalarAsync();
+
+                if (mealCount == 0)
+                    throw new Exception("No meals found in database.");
+
+                
+                const string insertPlanSql = @"INSERT INTO MealPlan (user_id, created_at, goal_type) 
+                                     VALUES (@uid, @created, @goal);
+                                     SELECT last_insert_rowid();";
+                using var planCmd = new SqliteCommand(insertPlanSql, conn, transaction);
+                planCmd.Parameters.AddWithValue("@uid", userId);
+                planCmd.Parameters.AddWithValue("@created", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                planCmd.Parameters.AddWithValue("@goal", "general"); // Simplified for now
+
+                int mealPlanId = Convert.ToInt32(await planCmd.ExecuteScalarAsync());
+
+                
+                const string getMealWithNutritionSql = @"
+            SELECT m.meal_id, 
+                   CAST(SUM(i.calories_per_100g * mi.quantity / 100) AS INT) as total_calories
+            FROM Meals m
+            LEFT JOIN MealsIngredients mi ON m.meal_id = mi.meal_id
+            LEFT JOIN Ingredients i ON mi.food_id = i.food_id
+            GROUP BY m.meal_id
+            ORDER BY RANDOM() LIMIT 3";
+
+                var mealIds = new List<int>();
+                using (var mealsCmd = new SqliteCommand(getMealWithNutritionSql, conn, transaction))
+                {
+                    using var mealReader = await mealsCmd.ExecuteReaderAsync();
+                    while (await mealReader.ReadAsync())
+                    {
+                        mealIds.Add(Convert.ToInt32(mealReader["meal_id"]));
+                    }
+                }
+
+               
+                const string insertMealPlanMealSql = @"INSERT INTO MealPlanMeal (mealPlanId, mealId, mealType, assigned_at, isConsumed) 
+                                               VALUES (@planId, @mealId, @mealType, @assignedAt, 0)";
+                var mealTypes = new[] { "breakfast", "lunch", "dinner" };
+
+                for (int i = 0; i < mealIds.Count; i++)
+                {
+                    using var mpmCmd = new SqliteCommand(insertMealPlanMealSql, conn, transaction);
+                    mpmCmd.Parameters.AddWithValue("@planId", mealPlanId);
+                    mpmCmd.Parameters.AddWithValue("@mealId", mealIds[i]);
+                    mpmCmd.Parameters.AddWithValue("@mealType", mealTypes[i]);
+                    mpmCmd.Parameters.AddWithValue("@assignedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    await mpmCmd.ExecuteNonQueryAsync();
+                }
+
+                transaction.Commit();
+                return mealPlanId;
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                throw new Exception($"Generation Failed: {ex.Message}");
+            }
+        }
+        /*
+        
+        public async Task<int> GeneratePersonalizedDailyMealPlan(int userId)
+        {
+            using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            using var transaction = conn.BeginTransaction();
+
+            try
+            {
                 //  check if there are any meals in the database
                 const string checkMealsSql = "SELECT COUNT(*) FROM Meals";
                 using var checkCmd = new SqliteCommand(checkMealsSql, conn, transaction);
@@ -361,7 +435,7 @@ namespace TeamNut.Repositories
                 throw;
             }
         }
-
+        */
         public async Task<List<Meal>> GetMealsForMealPlan(int mealPlanId)
         {
             var meals = new List<Meal>();

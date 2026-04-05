@@ -43,14 +43,15 @@ namespace TeamNut.Models
         [ObservableProperty]
         public partial bool IsFavorite { get; set; }
 
-        // Logic for showing/hiding the colorful tags in the UI
+        
         public Visibility VeganVisibility => IsVegan ? Visibility.Visible : Visibility.Collapsed;
         public Visibility KetoVisibility => IsKeto ? Visibility.Visible : Visibility.Collapsed;
         public Visibility GlutenFreeVisibility => IsGlutenFree ? Visibility.Visible : Visibility.Collapsed;
         public Visibility LactoseFreeVisibility => IsLactoseFree ? Visibility.Visible : Visibility.Collapsed;
         public Visibility NutFreeVisibility => IsNutFree ? Visibility.Visible : Visibility.Collapsed;
 
-        // Logic for the star character
+        public Visibility FavoriteVisibility => IsFavorite ? Visibility.Visible : Visibility.Collapsed;
+
         public string FavoriteIcon => IsFavorite ? "★" : "☆";
 
         [ObservableProperty]
@@ -59,15 +60,19 @@ namespace TeamNut.Models
         [ObservableProperty]
         public partial string ImageUrl { get; set; } = string.Empty;
 
-        // These tell the UI to refresh when a checkbox value changes in the DB
+        
         partial void OnIsVeganChanged(bool value) => OnPropertyChanged(nameof(VeganVisibility));
         partial void OnIsKetoChanged(bool value) => OnPropertyChanged(nameof(KetoVisibility));
         partial void OnIsGlutenFreeChanged(bool value) => OnPropertyChanged(nameof(GlutenFreeVisibility));
         partial void OnIsLactoseFreeChanged(bool value) => OnPropertyChanged(nameof(LactoseFreeVisibility));
         partial void OnIsNutFreeChanged(bool value) => OnPropertyChanged(nameof(NutFreeVisibility));
 
-        // This tells the UI to refresh the star immediately when clicked
-        partial void OnIsFavoriteChanged(bool value) => OnPropertyChanged(nameof(FavoriteIcon));
+        // to refresh the star immediately when clicked
+        partial void OnIsFavoriteChanged(bool value)
+        {
+            OnPropertyChanged(nameof(FavoriteIcon));
+            OnPropertyChanged(nameof(FavoriteVisibility));
+        }
     }
 }
 

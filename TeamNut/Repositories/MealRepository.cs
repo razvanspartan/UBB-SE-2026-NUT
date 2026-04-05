@@ -24,7 +24,7 @@ namespace TeamNut.Repositories
             var userId = UserSession.UserId ?? 0;
             var meals = new List<Meal>();
 
-            // 1. Start with the SELECT part
+           
             string baseSql = @"
         SELECT 
             m.meal_id, m.imageUrl, m.name, m.isKeto, m.isLactoseFree, 
@@ -43,27 +43,26 @@ namespace TeamNut.Repositories
             StringBuilder sql = new StringBuilder(baseSql);
             var cmd = new SqliteCommand();
 
-            // 2. APPLY FILTERS (The "Chicken Stopper")
-            // If the Vegan box is checked, we ONLY allow rows where isVegan is 1
+            
             if (filter.IsKeto) sql.Append(" AND m.isKeto = 1");
             if (filter.IsVegan) sql.Append(" AND m.isVegan = 1");
             if (filter.IsNutFree) sql.Append(" AND m.isNutFree = 1");
             if (filter.IsLactoseFree) sql.Append(" AND m.isLactoseFree = 1");
             if (filter.IsGlutenFree) sql.Append(" AND m.isGlutenFree = 1");
 
-            // 3. Handle Search
+            
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
             {
                 sql.Append(" AND m.name LIKE @search");
                 cmd.Parameters.AddWithValue("@search", $"%{filter.SearchTerm}%");
             }
 
-            // 4. Close it with GROUP BY
+            
             sql.Append(@" GROUP BY 
         m.meal_id, m.imageUrl, m.name, m.isKeto, m.isLactoseFree, 
         m.isNutFree, m.isVegan, m.isGlutenFree, m.description");
 
-            // 5. Connect and Run
+            
             using var conn = new SqliteConnection(_connectionString);
             cmd.Connection = conn;
             cmd.CommandText = sql.ToString();
@@ -102,7 +101,7 @@ namespace TeamNut.Repositories
             }
         }
 
-        // --- Keep the rest of the methods below exactly as they are ---
+       
 
         public async Task<IEnumerable<Meal>> GetAll()
         {
@@ -161,17 +160,52 @@ namespace TeamNut.Repositories
             cmd.Parameters.AddWithValue("@desc", meal.Description ?? (object)DBNull.Value);
         }
 
+
         private Meal MapReaderToMeal(SqliteDataReader reader)
         {
             return new Meal
             {
-                Id = Convert.ToInt32(reader["meal_id"]),
+                /*Id = Convert.ToInt32(reader["meal_id"]),
                 Name = reader["name"].ToString(),
                 ImageUrl = reader["imageUrl"]?.ToString(),
+                //  Convert.ToInt64 for ALL numeric fields from SQLite
                 Calories = Convert.ToInt32(reader["calories"]),
                 Protein = Convert.ToInt32(reader["protein"]),
                 Carbs = Convert.ToInt32(reader["carbs"]),
                 Fat = Convert.ToInt32(reader["fat"]),
+                */
+               
+                Id = (int)Convert.ToInt64(reader["meal_id"]),
+                Name = reader["name"].ToString(),
+                ImageUrl = reader["imageUrl"]?.ToString(),
+
+                Calories = (int)Math.Round(Convert.ToDouble(reader["calories"])),
+                Protein = (int)Math.Round(Convert.ToDouble(reader["protein"])),
+                Carbs = (int)Math.Round(Convert.ToDouble(reader["carbs"])),
+                Fat = (int)Math.Round(Convert.ToDouble(reader["fat"])),
+
+                IsKeto = Convert.ToInt64(reader["isKeto"]) == 1,
+                IsVegan = Convert.ToInt64(reader["isVegan"]) == 1,
+                IsNutFree = Convert.ToInt64(reader["isNutFree"]) == 1,
+                IsLactoseFree = Convert.ToInt64(reader["isLactoseFree"]) == 1,
+                IsGlutenFree = Convert.ToInt64(reader["isGlutenFree"]) == 1,
+                IsFavorite = Convert.ToInt64(reader["isFavorite"]) == 1,
+
+                Description = reader["description"]?.ToString()
+            };
+        }
+        /*
+        private Meal MapReaderToMeal(SqliteDataReader reader)
+        {
+            return new Meal
+            {
+                Id = Convert.ToInt64(reader["meal_id"]),
+                Name = reader["name"].ToString(),
+                ImageUrl = reader["imageUrl"]?.ToString(),
+                Calories = Convert.ToInt64(reader["calories"]),
+                Protein = Convert.ToInt64(reader["protein"]),
+                Carbs = Convert.ToInt64(reader["carbs"]),
+                Fat = Convert.ToInt64(reader["fat"]),
                 IsKeto = Convert.ToBoolean(reader["isKeto"]),
                 IsVegan = Convert.ToBoolean(reader["isVegan"]),
                 IsNutFree = Convert.ToBoolean(reader["isNutFree"]),
@@ -180,7 +214,7 @@ namespace TeamNut.Repositories
                 IsFavorite = Convert.ToBoolean(reader["isFavorite"]),
                 Description = reader["description"]?.ToString()
             };
-        }
+        }*/
 
         public async Task<List<string>> GetIngredientLinesForMealAsync(int mealId)
         {
@@ -457,13 +491,13 @@ namespace TeamNut.Repositories
         {
             return new Meal
             {
-                Id = Convert.ToInt32(reader["meal_id"]),
+                Id = Convert.ToInt64(reader["meal_id"]),
                 Name = reader["name"].ToString(),
                 ImageUrl = reader["imageUrl"]?.ToString(),
-                Calories = Convert.ToInt32(reader["calories"]),
-                Protein = Convert.ToInt32(reader["protein"]),
-                Carbs = Convert.ToInt32(reader["carbs"]),
-                Fat = Convert.ToInt32(reader["fat"]),
+                Calories = Convert.ToInt64(reader["calories"]),
+                Protein = Convert.ToInt64(reader["protein"]),
+                Carbs = Convert.ToInt64(reader["carbs"]),
+                Fat = Convert.ToInt64(reader["fat"]),
                 IsKeto = Convert.ToBoolean(reader["isKeto"]),
                 IsVegan = Convert.ToBoolean(reader["isVegan"]),
                 IsNutFree = Convert.ToBoolean(reader["isNutFree"]),
