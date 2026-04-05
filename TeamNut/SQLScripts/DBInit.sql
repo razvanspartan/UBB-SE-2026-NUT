@@ -131,6 +131,7 @@ CREATE TABLE Reminders (
     name VARCHAR(100),
     has_sound INTEGER DEFAULT 1,
     time TIME,
+    reminder_date TEXT, 
     frequency VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );

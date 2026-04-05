@@ -15,22 +15,22 @@ namespace TeamNut.Services
             _mealRepository = new MealRepository();
         }
 
-        // We updated this to handle BOTH the search text and the checkboxes
+        
         public async Task<List<Meal>> GetMealsAsync(MealFilter? filter = null)
         {
-            // If there's no filter, just get everything
+            
             if (filter == null)
             {
                 var allMeals = await _mealRepository.GetAll();
                 return allMeals.ToList();
             }
 
-            // This calls the "Clean" method we just fixed in the Repository!
+            
             var results = await _mealRepository.GetFilteredMeals(filter);
             return results.ToList();
         }
 
-        // This is a helper for the special filter screen
+      
         public async Task<List<Meal>> GetFilteredMealsAsync(MealFilter filter)
         {
             var results = await _mealRepository.GetFilteredMeals(filter);
