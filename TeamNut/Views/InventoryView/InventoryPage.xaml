@@ -15,7 +15,7 @@
         <StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
                 <SymbolIcon Symbol="Library" VerticalAlignment="Center"/>
-                <TextBlock Text="pantry" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Text="Pantry" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
 
             <Grid Margin="0,0,0,14" ColumnSpacing="12">
