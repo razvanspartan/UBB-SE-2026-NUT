@@ -15,6 +15,73 @@ namespace TeamNut.Services
             _mealRepository = new MealRepository();
         }
 
+        // We updated this to handle BOTH the search text and the checkboxes
+        public async Task<List<Meal>> GetMealsAsync(MealFilter? filter = null)
+        {
+            // If there's no filter, just get everything
+            if (filter == null)
+            {
+                var allMeals = await _mealRepository.GetAll();
+                return allMeals.ToList();
+            }
+
+            // This calls the "Clean" method we just fixed in the Repository!
+            var results = await _mealRepository.GetFilteredMeals(filter);
+            return results.ToList();
+        }
+
+        // This is a helper for the special filter screen
+        public async Task<List<Meal>> GetFilteredMealsAsync(MealFilter filter)
+        {
+            var results = await _mealRepository.GetFilteredMeals(filter);
+            return results.ToList();
+        }
+
+        public async Task<Meal?> GetByIdAsync(int id)
+        {
+            return await _mealRepository.GetById(id);
+        }
+
+        public async Task<List<Meal>> GetAllAsync()
+        {
+            var list = await _mealRepository.GetAll();
+            return list.ToList();
+        }
+
+        public async Task ToggleFavoriteAsync(Meal meal)
+        {
+            if (meal == null || !UserSession.UserId.HasValue) return;
+            await _mealRepository.SetFavoriteAsync(UserSession.UserId.Value, meal.Id, meal.IsFavorite);
+        }
+
+        public async Task<List<string>> GetMealIngredientLinesAsync(int mealId)
+        {
+            return await _mealRepository.GetIngredientLinesForMealAsync(mealId);
+        }
+    }
+}
+
+
+
+
+
+/*using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using TeamNut.Models;
+using TeamNut.Repositories;
+
+namespace TeamNut.Services
+{
+    public class MealService
+    {
+        private readonly MealRepository _mealRepository;
+
+        public MealService()
+        {
+            _mealRepository = new MealRepository();
+        }
+
         public async Task<List<Meal>> GetMealsAsync(string? filter = null)
         {
             var meals = (await _mealRepository.GetAll()).ToList();
@@ -59,3 +126,4 @@ namespace TeamNut.Services
         }
     }
 }
+*/

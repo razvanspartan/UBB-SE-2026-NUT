@@ -101,7 +101,7 @@ namespace TeamNut.Repositories
 
             try
             {
-                // First check if there are any meals in the database
+                //  check if there are any meals in the database
                 const string checkMealsSql = "SELECT COUNT(*) FROM Meals";
                 using var checkCmd = new SqliteCommand(checkMealsSql, conn, transaction);
                 int mealCount = (int)await checkCmd.ExecuteScalarAsync();
