@@ -10,7 +10,6 @@ namespace TeamNut.Views
     public sealed partial class MainPage : Page
     {
         private bool mealsLoaded = false;
-        private bool mealPlanLoaded = false;
         private bool chatLoaded = false;
         private bool shoppingListLoaded = false;
         private bool remindersLoaded = false; 
@@ -20,31 +19,9 @@ namespace TeamNut.Views
         public MainPage()
         {
             this.InitializeComponent();
-            //LoadTopReminder(); 
+  
         }
 
-        /*private async void LoadTopReminder()
-        {
-            try
-            {
-                
-                var next = await _reminderService.GetNextReminder(2);
-
-                if (next != null)
-                {
-                   
-                    MainNextReminderText.Text = $"{next.Name} at {next.Time}";
-                }
-                else
-                {
-                    MainNextReminderText.Text = "No upcoming meals";
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading header reminder: {ex.Message}");
-            }
-        }*/
 
         private void MainTabView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -58,10 +35,9 @@ namespace TeamNut.Views
                     MealsFrame.Navigate(typeof(TeamNut.MealsPage));
                     mealsLoaded = true;
                 }
-                else if (selectedItem == MealPlanTab && !mealPlanLoaded)
+                else if (selectedItem == MealPlanTab)
                 {
                     MealPlanFrame.Navigate(typeof(TeamNut.Views.MealPlanView.MealPlanPage));
-                    mealPlanLoaded = true;
                 }
                 else if (selectedItem == DailyLogTab)
                 {
