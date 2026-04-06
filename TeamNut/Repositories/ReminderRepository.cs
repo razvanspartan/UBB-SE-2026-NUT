@@ -31,14 +31,29 @@ namespace TeamNut.Repositories
             return null;
         }
 
+       
+        public async Task<IEnumerable<Reminder>> GetAll()
+        {
+            var reminders = new List<Reminder>();
+            using var conn = new SqliteConnection(_connectionString);
+            const string sql = "SELECT * FROM Reminders";
+            using var cmd = new SqliteCommand(sql, conn);
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                reminders.Add(MapReaderToReminder(reader));
+            }
+            return reminders;
+        }
+
+        
         public async Task<IEnumerable<Reminder>> GetAllByUserId(int userId)
         {
             var reminders = new List<Reminder>();
             using var conn = new SqliteConnection(_connectionString);
-
-            
             const string sql = "SELECT * FROM Reminders WHERE user_id = @uid";
-
             using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@uid", userId);
 
@@ -100,7 +115,7 @@ namespace TeamNut.Repositories
                 UserId = Convert.ToInt32(reader["user_id"]),
                 Name = reader["name"].ToString(),
                 HasSound = Convert.ToBoolean(reader["has_sound"]),
-                Time = reader["time"].ToString(), 
+                Time = TimeSpan.Parse(reader["time"].ToString()),
                 ReminderDate = reader["reminder_date"].ToString(), 
                 Frequency = reader["frequency"].ToString()
             };

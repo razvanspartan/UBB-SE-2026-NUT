@@ -47,14 +47,7 @@ namespace TeamNut.ViewModels
             }
         }
 
-        protected override async void OnAppearing()
-        {
-            base.OnAppearing();
-            var viewModel = (RemindersViewModel)BindingContext;
-        
-            await viewModel.LoadRemindersCommand.ExecuteAsync(null);
-        }
-
+       
         [RelayCommand]
         public async Task DeleteReminder(Reminder reminder)
         {
@@ -84,13 +77,7 @@ namespace TeamNut.ViewModels
             }
         }
 
-        protected override async void OnAppearing()
-        {
-            base.OnAppearing();
-            var viewModel = (RemindersViewModel)BindingContext;
-           
-            await viewModel.LoadRemindersCommand.ExecuteAsync(null);
-        }
+        
 
         [RelayCommand]
         public void PrepareNewReminder()
