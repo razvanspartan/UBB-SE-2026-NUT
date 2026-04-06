@@ -26,6 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Remove="Views\RemindersView\RemindersView.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
@@ -59,6 +63,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Views\MealPlanView\DailyMealPlanPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="Views\RemindersView\RemindersView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
     <Page Update="Views\MainPage.xaml">
