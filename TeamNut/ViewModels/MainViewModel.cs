@@ -22,5 +22,13 @@ public partial class MainViewModel : ObservableObject
                 ? $"{next.Name} at {next.Time:hh\\:mm}"
                 : "No upcoming meals";
         }
+
     }
+
+   
+    public async Task LoadHeaderData()
+    {
+        await UpdateHeaderReminder();
+    }
+
 }

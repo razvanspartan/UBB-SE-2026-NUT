@@ -17,6 +17,11 @@ namespace TeamNut.Services
             
         }
 
+        public async Task<Reminder?> GetNextReminder(int userId)
+        {
+            return await _reminderRepository.GetNextReminder(userId);
+        }
+
         
         public async Task<string> SaveReminder(Reminder reminder)
         {

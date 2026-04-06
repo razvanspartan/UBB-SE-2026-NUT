@@ -17,11 +17,12 @@ namespace TeamNut.Views
 
         private readonly ReminderService _reminderService = new();
         public MainViewModel ViewModel { get; } = new();
+        public TeamNut.ViewModels.RemindersViewModel RemindersViewModel { get; } = new();
         public MainPage()
         {
             this.InitializeComponent();
             _ = ViewModel.LoadHeaderData();
-            LoadTopReminder(); 
+            LoadTopReminder();
         }
 
         
@@ -82,7 +83,27 @@ namespace TeamNut.Views
                 System.Diagnostics.Debug.WriteLine($"Error in tab selection: {ex.Message}");
             }
         }
-        public TeamNut.ViewModels.RemindersViewModel ViewModel { get; } = new();
+        private async void LoadTopReminder()
+        {
+            try
+            {
+                int userId = UserSession.UserId ?? 0;
+                if (userId == 0) return;
+
+                var next = await _reminderService.GetNextReminder(userId);
+                var text = next != null ? $"{next.Name} at {next.Time:hh\\:mm}" : "No upcoming meals";
+
+                // Update UI element if available
+                if (MainNextReminderText != null)
+                {
+                    MainNextReminderText.Text = text;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading top reminder: {ex.Message}");
+            }
+        }
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
             UserSession.Logout();
