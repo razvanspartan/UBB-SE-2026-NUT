@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="NutData.db" />
     <None Remove="Views\RemindersView\RemindersPage.xaml" />
     <None Remove="Views\RemindersView\RemindersView %28old%29.xaml" />
     <None Remove="Views\UserView\LoginPage.xaml" />

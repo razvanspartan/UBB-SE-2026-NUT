@@ -13,6 +13,7 @@
             <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter"/>
+            <local:IntGreaterThanZeroToVisibilityConverter x:Key="IntGreaterThanZeroToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

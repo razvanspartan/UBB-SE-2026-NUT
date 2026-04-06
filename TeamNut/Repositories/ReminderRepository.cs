@@ -77,12 +77,21 @@ namespace TeamNut.Repositories
             cmd.Parameters.AddWithValue("@uid", entity.UserId);
             cmd.Parameters.AddWithValue("@name", entity.Name);
             cmd.Parameters.AddWithValue("@sound", entity.HasSound ? 1 : 0);
-            cmd.Parameters.AddWithValue("@time", entity.Time);
+           
+            cmd.Parameters.AddWithValue("@time", entity.Time.ToString());
             cmd.Parameters.AddWithValue("@date", entity.ReminderDate); 
             cmd.Parameters.AddWithValue("@freq", entity.Frequency);
 
             await conn.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
+
+            
+            using var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn);
+            var scalar = await idCmd.ExecuteScalarAsync();
+            if (scalar != null && long.TryParse(scalar.ToString(), out var lastId))
+            {
+                entity.Id = Convert.ToInt32(lastId);
+            }
         }
 
         public async Task Update(Reminder entity)
@@ -98,7 +107,7 @@ namespace TeamNut.Repositories
             cmd.Parameters.AddWithValue("@id", entity.Id);
             cmd.Parameters.AddWithValue("@name", entity.Name);
             cmd.Parameters.AddWithValue("@sound", entity.HasSound ? 1 : 0);
-            cmd.Parameters.AddWithValue("@time", entity.Time);
+            cmd.Parameters.AddWithValue("@time", entity.Time.ToString());
             cmd.Parameters.AddWithValue("@date", entity.ReminderDate);
             cmd.Parameters.AddWithValue("@freq", entity.Frequency);
 
@@ -151,23 +160,7 @@ namespace TeamNut.Repositories
             return await reader.ReadAsync() ? MapReaderToReminder(reader) : null;
         }
 
-        /*public async Task<Reminder> GetNextReminder(int userId)
-        {
-            using var conn = new SqliteConnection(_connectionString);
-            const string sql = @"SELECT * FROM Reminders 
-                         WHERE user_id = @uid AND 
-                         (reminder_date > date('now') OR (reminder_date = date('now') AND time >= time('now')))
-                         ORDER BY reminder_date ASC, time ASC 
-                         LIMIT 1";
-
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@uid", userId);
-
-            await conn.OpenAsync();
-            using var reader = await cmd.ExecuteReaderAsync();
-            return await reader.ReadAsync() ? MapReaderToReminder(reader) : null;
-        }*/
-
+        
 
     }
 }

@@ -10,6 +10,7 @@ namespace TeamNut.Services
     public class ReminderService
     {
         private readonly ReminderRepository _reminderRepository;
+        public static event EventHandler<int>? RemindersChanged;
 
         public ReminderService()
         {
@@ -26,6 +27,11 @@ namespace TeamNut.Services
         public async Task<string> SaveReminder(Reminder reminder)
         {
             
+            if ((reminder.UserId == 0 || reminder.UserId == default) && TeamNut.Models.UserSession.UserId != null)
+            {
+                reminder.UserId = TeamNut.Models.UserSession.UserId ?? reminder.UserId;
+            }
+
             if (string.IsNullOrWhiteSpace(reminder.Name) || reminder.Name.Length > 50)
             {
                 return "Error: Name must be between 1 and 50 characters.";
