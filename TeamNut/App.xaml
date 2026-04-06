@@ -14,6 +14,11 @@
             <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter"/>
             <local:IntGreaterThanZeroToVisibilityConverter x:Key="IntGreaterThanZeroToVisibilityConverter"/>
+                <local:RoleToHorizontalAlignmentConverter x:Key="RoleToHorizontalAlignmentConverter" />
+            <local:IntZeroToVisibilityConverter x:Key="IntZeroToVisibilityConverter" />
+            <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
+            <local:RoleToBackgroundConverter x:Key="RoleToBackgroundConverter" />
+                <local:UnansweredToHighlightConverter x:Key="UnansweredToHighlightConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
