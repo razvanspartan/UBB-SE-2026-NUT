@@ -13,6 +13,7 @@ namespace TeamNut.Views
         private bool chatLoaded = false;
         private bool shoppingListLoaded = false;
         private bool remindersLoaded = false; 
+        private readonly Microsoft.UI.Dispatching.DispatcherQueue _dispatcher;
 
         private readonly ReminderService _reminderService = new();
         public MainViewModel ViewModel { get; } = new();
@@ -20,8 +21,29 @@ namespace TeamNut.Views
         public MainPage()
         {
             this.InitializeComponent();
+            _dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
             _ = ViewModel.LoadHeaderData();
             LoadTopReminder();
+            ReminderService.RemindersChanged += OnRemindersChanged;
+        }
+
+        private void OnRemindersChanged(object? sender, int userId)
+        {
+            try
+            {
+                var current = UserSession.UserId ?? 0;
+                if (current != userId) return;
+
+                if (_dispatcher != null)
+                {
+                    _dispatcher.TryEnqueue(() => LoadTopReminder());
+                }
+                else
+                {
+                    LoadTopReminder();
+                }
+            }
+            catch { }
         }
 
         

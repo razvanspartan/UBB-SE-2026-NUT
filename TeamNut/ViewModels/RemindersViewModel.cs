@@ -57,6 +57,8 @@ namespace TeamNut.ViewModels
             {
                 Reminders.Remove(reminder);
             }
+
+            ReminderService.NotifyRemindersChangedForUser(UserSession.UserId ?? 0);
         }
 
         

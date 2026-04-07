@@ -23,6 +23,11 @@ namespace TeamNut.Services
             return await _reminderRepository.GetNextReminder(userId);
         }
 
+        public async Task<Reminder?> GetReminderById(int id)
+        {
+            return await _reminderRepository.GetById(id);
+        }
+
         
         public async Task<string> SaveReminder(Reminder reminder)
         {
@@ -41,6 +46,11 @@ namespace TeamNut.Services
                 await _reminderRepository.Add(reminder);
             else
                 await _reminderRepository.Update(reminder);
+                try
+                {
+                    RemindersChanged?.Invoke(this, reminder.UserId);
+                }
+                catch { }
 
             return "Success";
 
@@ -64,7 +74,25 @@ namespace TeamNut.Services
 
         public async Task DeleteReminder(int id)
         {
-            await _reminderRepository.Delete(id);
+            try
+            {
+                var existing = await _reminderRepository.GetById(id);
+                await _reminderRepository.Delete(id);
+                if (existing != null)
+                {
+                    RemindersChanged?.Invoke(this, existing.UserId);
+                }
+            }
+            catch { }
+        }
+
+        public static void NotifyRemindersChangedForUser(int userId)
+        {
+            try
+            {
+                RemindersChanged?.Invoke(null, userId);
+            }
+            catch { }
         }
     }
 }

@@ -50,10 +50,9 @@
                                    Visibility="{Binding Reminders.Count, Converter={StaticResource IntGreaterThanZeroToVisibilityConverter}, ConverterParameter=Inverse}"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                        <Button Content="Add" Command="{Binding DataContext.PrepareNewReminderCommand, ElementName=RemindersRoot}" />
-                        <Button Content="View Details" VerticalAlignment="Center"
-                                Visibility="{Binding Reminders.Count, Converter={StaticResource IntGreaterThanZeroToVisibilityConverter}}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <Button Content="Add Reminder" Command="{Binding DataContext.PrepareNewReminderCommand, ElementName=RemindersRoot}" MinWidth="120" Height="36" />
+                       
                     </StackPanel>
                 </Grid>
             </StackPanel>
