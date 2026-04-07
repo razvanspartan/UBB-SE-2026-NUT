@@ -41,9 +41,28 @@ namespace TeamNut.Services
 
                     if (!anyToday)
                     {
-                        var breakfast = new Reminder { UserId = userId, Name = "Breakfast", ReminderDate = todays, Time = new TimeSpan(8,0,0), HasSound = false, Frequency = "Once" };
-                        var lunch = new Reminder { UserId = userId, Name = "Lunch", ReminderDate = todays, Time = new TimeSpan(13,0,0), HasSound = false, Frequency = "Once" };
-                        var dinner = new Reminder { UserId = userId, Name = "Dinner", ReminderDate = todays, Time = new TimeSpan(17,0,0), HasSound = false, Frequency = "Once" };
+                        var meals = await GetMealsForMealPlanAsync(mealPlanId);
+
+                        string breakfastName = "Breakfast";
+                        string lunchName = "Lunch";
+                        string dinnerName = "Dinner";
+
+                        if (meals != null && meals.Count > 0)
+                        {
+                            if (!string.IsNullOrWhiteSpace(meals[0].Name)) breakfastName = meals[0].Name.Trim();
+                        }
+                        if (meals != null && meals.Count > 1)
+                        {
+                            if (!string.IsNullOrWhiteSpace(meals[1].Name)) lunchName = meals[1].Name.Trim();
+                        }
+                        if (meals != null && meals.Count > 2)
+                        {
+                            if (!string.IsNullOrWhiteSpace(meals[2].Name)) dinnerName = meals[2].Name.Trim();
+                        }
+
+                        var breakfast = new Reminder { UserId = userId, Name = breakfastName, ReminderDate = todays, Time = new TimeSpan(8,0,0), HasSound = false, Frequency = "Once" };
+                        var lunch = new Reminder { UserId = userId, Name = lunchName, ReminderDate = todays, Time = new TimeSpan(13,0,0), HasSound = false, Frequency = "Once" };
+                        var dinner = new Reminder { UserId = userId, Name = dinnerName, ReminderDate = todays, Time = new TimeSpan(17,0,0), HasSound = false, Frequency = "Once" };
 
                         await reminderService.SaveReminder(breakfast);
                         await reminderService.SaveReminder(lunch);
