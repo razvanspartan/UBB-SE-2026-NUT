@@ -27,6 +27,12 @@
                                VerticalAlignment="Center" 
                                Foreground="Gray" 
                                Margin="20,0,0,0"/>
+
+                    <Button x:Name="MainNextReminderDetailsButton"
+                            Content="Details"
+                            VerticalAlignment="Center"
+                            Margin="8,0,0,0"
+                            Click="MainNextReminderDetailsButton_Click"/>
                 </StackPanel>
 
                 <Button Grid.Column="1"

@@ -111,6 +111,64 @@ namespace TeamNut.Views
                 app._window.Content = new TeamNut.Views.UserView.UserView();
             }
         }
+
+        private async void MainNextReminderDetailsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int userId = UserSession.UserId ?? 0;
+                if (userId == 0) return;
+
+                var reminder = await _reminderService.GetNextReminder(userId);
+                if (reminder == null)
+                {
+                    var noDialog = new ContentDialog
+                    {
+                        Title = "Reminder Details",
+                        Content = "No upcoming reminders.",
+                        CloseButtonText = "Close",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await noDialog.ShowAsync();
+                    return;
+                }
+
+                var panel = new StackPanel { Spacing = 8 };
+                panel.Children.Add(new TextBlock { Text = "Name", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                panel.Children.Add(new TextBlock { Text = reminder.Name ?? string.Empty, TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap });
+
+                panel.Children.Add(new TextBlock { Text = "Date", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                panel.Children.Add(new TextBlock { Text = reminder.ReminderDate ?? string.Empty });
+
+                panel.Children.Add(new TextBlock { Text = "Time", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                panel.Children.Add(new TextBlock { Text = reminder.Time.ToString(@"hh\:mm") });
+
+                panel.Children.Add(new TextBlock { Text = "Sound", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                panel.Children.Add(new TextBlock { Text = reminder.HasSound ? "On" : "Off" });
+
+                panel.Children.Add(new TextBlock { Text = "Frequency", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                panel.Children.Add(new TextBlock { Text = reminder.Frequency ?? string.Empty });
+
+                var dialog = new ContentDialog
+                {
+                    Title = "Reminder Details",
+                    Content = new ScrollViewer
+                    {
+                        Content = panel,
+                        VerticalScrollMode = Microsoft.UI.Xaml.Controls.ScrollMode.Auto,
+                        VerticalScrollBarVisibility = Microsoft.UI.Xaml.Controls.ScrollBarVisibility.Auto
+                    },
+                    CloseButtonText = "Close",
+                    XamlRoot = this.XamlRoot
+                };
+
+                await dialog.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error showing reminder details: {ex.Message}");
+            }
+        }
     }
 }
 
