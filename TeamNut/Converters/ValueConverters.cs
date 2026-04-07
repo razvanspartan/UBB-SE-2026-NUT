@@ -184,4 +184,29 @@ namespace TeamNut
             throw new NotImplementedException();
         }
     }
+
+    public class IntGreaterThanZeroToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is int intValue)
+            {
+                var visible = intValue > 0;
+                if (parameter?.ToString() == "Inverse") return visible ? Visibility.Collapsed : Visibility.Visible;
+                return visible ? Visibility.Visible : Visibility.Collapsed;
+            }
+            if (value is long longValue)
+            {
+                var visible = longValue > 0;
+                if (parameter?.ToString() == "Inverse") return visible ? Visibility.Collapsed : Visibility.Visible;
+                return visible ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

@@ -28,6 +28,50 @@ namespace TeamNut.Services
             {
                 int mealPlanId = await _mealPlanRepository.GeneratePersonalizedDailyMealPlan(userId);
 
+                try
+                {
+                    var reminderService = new ReminderService();
+                    var todays = DateTime.Today.ToString("yyyy-MM-dd");
+                    var existing = (await reminderService.GetUserReminders(userId));
+                    bool anyToday = false;
+                    foreach (var r in existing)
+                    {
+                        if (r.ReminderDate == todays) { anyToday = true; break; }
+                    }
+
+                    if (!anyToday)
+                    {
+                        var meals = await GetMealsForMealPlanAsync(mealPlanId);
+
+                        string breakfastName = "Breakfast";
+                        string lunchName = "Lunch";
+                        string dinnerName = "Dinner";
+
+                        if (meals != null && meals.Count > 0)
+                        {
+                            if (!string.IsNullOrWhiteSpace(meals[0].Name)) breakfastName = meals[0].Name.Trim();
+                        }
+                        if (meals != null && meals.Count > 1)
+                        {
+                            if (!string.IsNullOrWhiteSpace(meals[1].Name)) lunchName = meals[1].Name.Trim();
+                        }
+                        if (meals != null && meals.Count > 2)
+                        {
+                            if (!string.IsNullOrWhiteSpace(meals[2].Name)) dinnerName = meals[2].Name.Trim();
+                        }
+
+                        var breakfast = new Reminder { UserId = userId, Name = breakfastName, ReminderDate = todays, Time = new TimeSpan(8,0,0), HasSound = false, Frequency = "Once" };
+                        var lunch = new Reminder { UserId = userId, Name = lunchName, ReminderDate = todays, Time = new TimeSpan(13,0,0), HasSound = false, Frequency = "Once" };
+                        var dinner = new Reminder { UserId = userId, Name = dinnerName, ReminderDate = todays, Time = new TimeSpan(17,0,0), HasSound = false, Frequency = "Once" };
+
+                        await reminderService.SaveReminder(breakfast);
+                        await reminderService.SaveReminder(lunch);
+                        await reminderService.SaveReminder(dinner);
+
+                        ReminderService.NotifyRemindersChangedForUser(userId);
+                    }
+                }
+                catch { }
                 if (mealPlanId <= 0)
                 {
                     throw new InvalidOperationException("Failed to generate meal plan. Please try again.");

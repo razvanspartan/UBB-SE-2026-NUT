@@ -1,15 +1,19 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Dispatching;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Services;
-
+using Windows.System;
+using System;
 namespace TeamNut.ViewModels
 {
     public partial class RemindersViewModel : ObservableObject
     {
         private readonly ReminderService _reminderService;
+        private readonly Microsoft.UI.Dispatching.DispatcherQueue? _dispatcher;
 
         
         public ObservableCollection<Reminder> Reminders { get; } = new();
@@ -19,8 +23,20 @@ namespace TeamNut.ViewModels
 
         public RemindersViewModel()
         {
-            
             _reminderService = new ReminderService();
+           
+            _dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+            ReminderService.RemindersChanged += OnRemindersChanged;
+        }
+
+        private async void OnRemindersChanged(object? sender, int userId)
+        {
+            
+            var current = UserSession.UserId ?? 0;
+            if (current == userId)
+            {
+                await LoadReminders();
+            }
         }
 
         
@@ -33,7 +49,16 @@ namespace TeamNut.ViewModels
             if (reminder == null) return;
 
             await _reminderService.DeleteReminder(reminder.Id);
-            Reminders.Remove(reminder);
+            if (_dispatcher != null)
+            {
+                _dispatcher.TryEnqueue(() => Reminders.Remove(reminder));
+            }
+            else
+            {
+                Reminders.Remove(reminder);
+            }
+
+            ReminderService.NotifyRemindersChangedForUser(UserSession.UserId ?? 0);
         }
 
         
@@ -44,44 +69,109 @@ namespace TeamNut.ViewModels
         [RelayCommand]
         public async Task SaveReminder(Reminder reminder)
         {
-            if (reminder == null) return;
-
             
+            if (reminder == null) return;
+            await SaveReminderAsync(reminder);
+        }
+
+        public async Task<string> SaveReminderAsync(Reminder reminder)
+        {
+            if (reminder == null) return "Error: invalid reminder";
+
             string result = await _reminderService.SaveReminder(reminder);
 
             if (result == "Success")
             {
-                
                 await LoadReminders();
             }
+
+            return result;
         }
 
         [ObservableProperty]
         private Reminder? _nextReminder;
 
+
         [RelayCommand]
         public async Task LoadReminders()
         {
+            
             if (IsBusy) return;
+
             try
             {
                 IsBusy = true;
-                
-                var items = await _reminderService.GetUserReminders();
-                Reminders.Clear();
-                foreach (var item in items) Reminders.Add(item);
+                int currentId = UserSession.UserId ?? 0;
 
-                
-                //NextReminder = await _reminderService.GetNextReminder(2);
+                if (currentId != 0)
+                {
+                    var items = (await _reminderService.GetUserReminders(currentId)).ToList();
+                    var next = await _reminderService.GetNextReminder(currentId);
+
+                    
+                    if (_dispatcher != null)
+                    {
+                        _dispatcher.TryEnqueue(() =>
+                        {
+                            Reminders.Clear();
+                            foreach (var item in items)
+                            {
+                                Reminders.Add(item);
+                            }
+
+                            NextReminder = next;
+                        });
+                    }
+                    else
+                    {
+                        
+                        Reminders.Clear();
+                        foreach (var item in items) Reminders.Add(item);
+                        NextReminder = next;
+                    }
+                }
             }
-            finally { IsBusy = false; }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Reminders Load Error: {ex.Message}");
+            }
+            finally
+            {
+                
+                IsBusy = false;
+            }
         }
+
+      
+
 
         [RelayCommand]
         public void PrepareNewReminder()
         {
-            
-            SelectedReminder = new Reminder { UserId = 1 }; 
+            var newReminder = new Reminder { UserId = UserSession.UserId ?? 0 };
+            if (_dispatcher != null)
+            {
+                _dispatcher.TryEnqueue(() => SelectedReminder = newReminder);
+            }
+            else
+            {
+                SelectedReminder = newReminder;
+            }
+        }
+
+        [RelayCommand]
+        public void EditReminder(Reminder reminder)
+        {
+            if (reminder == null) return;
+
+            if (_dispatcher != null)
+            {
+                _dispatcher.TryEnqueue(() => SelectedReminder = reminder);
+            }
+            else
+            {
+                SelectedReminder = reminder;
+            }
         }
     }
 }
