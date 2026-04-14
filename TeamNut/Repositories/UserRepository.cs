@@ -172,7 +172,7 @@ public class UserRepository : IRepository<User>
                 Age = reader.GetInt32(4),
                 Gender = reader.GetString(5),
                 Goal = reader.GetString(6),
-                Bmi = Convert.ToInt32(reader.GetValue(7)),
+                Bmi = Convert.ToDouble(reader.GetValue(7)),
                 CalorieNeeds = Convert.ToInt32(reader.GetValue(8)),
                 ProteinNeeds = Convert.ToInt32(reader.GetValue(9)),
                 CarbNeeds = Convert.ToInt32(reader.GetValue(10)),

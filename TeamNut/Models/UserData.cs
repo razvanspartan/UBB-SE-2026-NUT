@@ -36,7 +36,7 @@ namespace TeamNut.Models
         public partial string Goal { get; set; } = string.Empty;
 
         [ObservableProperty]
-        public partial int Bmi { get; set; }
+        public partial double Bmi { get; set; }
 
         [ObservableProperty]
         public partial int CalorieNeeds { get; set; }
@@ -67,13 +67,12 @@ namespace TeamNut.Models
             return age;
         }
 
-        public int CalculateBmi()
+        public double CalculateBmi()
         {
-            if (Height <= 0 || Weight <= 0) return 0;
+            if (Height <= 0 || Weight <= 0) return 0.0;
 
             double heightInMeters = Height / 100.0;
-            double bmi = Weight / (heightInMeters * heightInMeters);
-            return (int)Math.Round(bmi);
+            return Math.Round(Weight / (heightInMeters * heightInMeters), 1);
         }
 
         public int CalculateCalorieNeeds()
