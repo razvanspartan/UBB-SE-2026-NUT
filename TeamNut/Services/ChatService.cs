@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TeamNut.Models;
-using TeamNut.Repositories.Chat;
+using TeamNut.Repositories.Interfaces;
 
 namespace TeamNut.Services
 {

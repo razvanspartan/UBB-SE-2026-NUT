@@ -75,6 +75,8 @@ namespace TeamNut
             services.AddTransient<IUserService, UserService>();
             services.AddSingleton<UserViewModel>();
 
+            services.AddTransient<MainViewModel>();
+            
 
 
             return services.BuildServiceProvider();

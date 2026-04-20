@@ -5,16 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Repositories;
+using TeamNut.Repositories.Interfaces;
 using TeamNut.Services.Interfaces;
 
 namespace TeamNut.Services
 {
     public class UserService : IUserService
     {
-        private readonly UserRepository _userRepository;
-        public UserService()
+        private readonly IUserRepository _userRepository;
+        public UserService(IUserRepository userRepository)
         {
-            _userRepository = new UserRepository();
+            _userRepository = userRepository;
         }
 
         public async Task<bool> CheckIfUsernameExistsAsync(string username)
