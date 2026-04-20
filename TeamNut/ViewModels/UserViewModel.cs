@@ -95,11 +95,11 @@ namespace TeamNut.ViewModels
                     StatusMessage = "Please select a valid birthdate.";
                     return;
                 }
-                CurrentUserData.Bmi = CurrentUserData.CalculateBmi();
+                CurrentUserData.BodyMassIndex = CurrentUserData.CalculateBmi();
                 CurrentUserData.CalorieNeeds = CurrentUserData.CalculateCalorieNeeds();
                 CurrentUserData.ProteinNeeds = CurrentUserData.CalculateProteinNeeds();
                 CurrentUserData.FatNeeds = CurrentUserData.CalculateFatNeeds();
-                CurrentUserData.CarbNeeds = CurrentUserData.CalculateCarbNeeds();
+                CurrentUserData.CarbohydrateNeeds = CurrentUserData.CalculateCarbNeeds();
 
                 var registeredUser = await _userService.RegisterUserAsync(CurrentUser);
                 if (registeredUser == null)
@@ -148,7 +148,7 @@ namespace TeamNut.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = "Database Connection Failed! Start SSMS and check your server. Error: " + ex.Message;
+                StatusMessage = "Database Connection Failed! Check your SQLite database file. Error: " + ex.Message;
             }
         }
     }
