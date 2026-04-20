@@ -100,7 +100,6 @@ namespace TeamNut.Repositories
 
             await connection.OpenAsync();
 
-            // Get the ID of the newly created user
             var insertedId = await command.ExecuteScalarAsync();
 
             if (insertedId != null)
@@ -156,7 +155,7 @@ namespace TeamNut.Repositories
                     Age = reader.GetInt32(4),
                     Gender = reader.GetString(5),
                     Goal = reader.GetString(6),
-                    BodyMassIndex = Convert.ToInt32(reader.GetValue(7)),
+                    BodyMassIndex = Convert.ToDouble(reader.GetValue(7)),
                     CalorieNeeds = Convert.ToInt32(reader.GetValue(8)),
                     ProteinNeeds = Convert.ToInt32(reader.GetValue(9)),
                     CarbohydrateNeeds = Convert.ToInt32(reader.GetValue(10)),
@@ -192,9 +191,9 @@ namespace TeamNut.Repositories
         public async Task UpdateUserData(UserData data)
         {
             using var connection = new SqliteConnection(_connectionString);
-            const string query = @"UPDATE UserData 
-                                  SET weight = @weight, height = @height, age = @age, gender = @gender, goal = @goal, 
-                                      bmi = @bodyMassIndex, calorie_needs = @calorieNeeds, protein_needs = @proteinNeeds, 
+            const string query = @"UPDATE UserData
+                                  SET weight = @weight, height = @height, age = @age, gender = @gender, goal = @goal,
+                                      bmi = @bodyMassIndex, calorie_needs = @calorieNeeds, protein_needs = @proteinNeeds,
                                       carb_needs = @carbohydrateNeeds, fat_needs = @fatNeeds
                                   WHERE user_id = @userId";
 
