@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace TeamNut.Repositories
 {
-    internal class DbConfig
+    internal class DbConfig : IDbConfig
     {
-        public static string ConnectionString
+        public string ConnectionString
         {
             get
             {

@@ -1,5 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System;
+using TeamNut.Repositories;
+using TeamNut.Services;
 using TeamNut.ViewModels;
 using TeamNut.Views;
 using TeamNut.Views.UserView;
@@ -9,6 +13,8 @@ namespace TeamNut
     public partial class App : Application
     {
         internal Window? _window;
+
+        public static IServiceProvider Services { get; private set; }
 
         public static UserViewModel UserViewModel { get; } = new UserViewModel();
 
@@ -20,6 +26,25 @@ namespace TeamNut
             };
 
             InitializeComponent();
+            Services = ConfigureServices();
+        }
+
+        private static IServiceProvider ConfigureServices()
+        {
+            var services = new ServiceCollection();
+
+
+            services.AddSingleton<IDbConfig, DbConfig>();
+
+
+            services.AddTransient<IChatRepository, ChatRepository>();
+
+
+            services.AddTransient<IChatService, ChatService>();
+
+            services.AddTransient<NutritionistChatViewModel>();
+
+            return services.BuildServiceProvider();
         }
 
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)

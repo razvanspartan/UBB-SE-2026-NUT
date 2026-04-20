@@ -6,12 +6,12 @@ using TeamNut.Repositories;
 
 namespace TeamNut.Services
 {
-    public class ChatService
+    public class ChatService : IChatService
     {
-        private readonly ChatRepository _repo;
-        public ChatService()
+        private readonly IChatRepository _repo;
+        public ChatService(IChatRepository repo)
         {
-            _repo = new ChatRepository();
+            _repo = repo;
         }
 
         public Task<IEnumerable<Conversation>> GetAllConversationsAsync() => _repo.GetAllConversationsAsync();

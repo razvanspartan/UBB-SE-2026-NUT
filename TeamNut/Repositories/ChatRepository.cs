@@ -6,9 +6,14 @@ using TeamNut.Models;
 
 namespace TeamNut.Repositories
 {
-    internal class ChatRepository
+    internal class ChatRepository : IChatRepository
     {
-        private readonly string _connectionString = DbConfig.ConnectionString;
+        private readonly string _connectionString;
+
+        public ChatRepository(IDbConfig dbConfig)
+        {
+            _connectionString = dbConfig.ConnectionString;
+        }
 
         public async Task<IEnumerable<Conversation>> GetAllConversationsAsync()
         {

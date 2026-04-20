@@ -14,7 +14,7 @@ namespace TeamNut.ViewModels
 {
     public partial class NutritionistChatViewModel : ObservableObject
     {
-        private readonly ChatService _chatService;
+        private readonly IChatService _chatService;
 
         private CancellationTokenSource? _autoRefreshCts;
 
@@ -41,9 +41,9 @@ namespace TeamNut.ViewModels
         [ObservableProperty]
         private Conversation? selectedConversation;
 
-        public NutritionistChatViewModel()
+        public NutritionistChatViewModel(IChatService chatService)
         {
-            _chatService = new ChatService();
+            _chatService = chatService;
             _ = LoadConversationsAsync();
 
             // start periodic refresh
