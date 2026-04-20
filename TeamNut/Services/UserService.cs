@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Repositories;
+using TeamNut.Services.Interfaces;
 
 namespace TeamNut.Services
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly UserRepository _userRepository;
         public UserService()

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using TeamNut.ModelViews;
 using TeamNut.Repositories;
 using TeamNut.Repositories.Interfaces;
 using TeamNut.Services;
@@ -51,6 +52,16 @@ namespace TeamNut
             services.AddTransient<IShoppingListRepository, ShoppingListRepository>();
             services.AddTransient<IShoppingListService, ShoppingListService>();
             services.AddTransient<ShoppingListViewModel>();
+
+            services.AddTransient<IIngredientRepository, IngredientRepository>();
+
+            services.AddTransient<IInventoryRepository, InventoryRepository>();
+            services.AddTransient<IInventoryService, InventoryService>();
+            services.AddTransient<InventoryViewModel>();
+
+            services.AddTransient<IMealPlanRepository, MealPlanRepository>();
+            services.AddTransient<IMealPlanService, MealPlanService>();
+            services.AddTransient<MealPlanViewModel>();
 
 
 

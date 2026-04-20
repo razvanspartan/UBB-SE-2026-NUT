@@ -10,7 +10,12 @@ namespace TeamNut.Repositories
 {
     internal class MealPlanRepository : IMealPlanRepository
     {
-        private readonly string _connectionString = DbConfig.ConnectionString;
+        private readonly string _connectionString;
+
+        public MealPlanRepository(IDbConfig dbConfig)
+        {
+            _connectionString = dbConfig.ConnectionString;
+        }
 
         public async Task<MealPlan> GetById(int id)
         {

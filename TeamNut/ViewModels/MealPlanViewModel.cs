@@ -7,13 +7,14 @@ using System.Collections.Generic;
 using System.Linq;
 using TeamNut.Models;
 using TeamNut.Services;
+using TeamNut.Services.Interfaces;
 using TeamNut.Views.MealPlanView;
 
 namespace TeamNut.ModelViews
 {
     public partial class MealPlanViewModel : ObservableObject
     {
-        private readonly MealPlanService _mealPlanService;
+        private readonly IMealPlanService _mealPlanService;
 
         [ObservableProperty]
         public partial string StatusMessage { get; set; }
@@ -81,9 +82,9 @@ namespace TeamNut.ModelViews
         [ObservableProperty]
         private string errorDialogMessage;
 
-        public MealPlanViewModel()
+        public MealPlanViewModel(IMealPlanService mealPlanService)
         {
-            _mealPlanService = new MealPlanService();
+            _mealPlanService = mealPlanService;
         }
 
         [RelayCommand]

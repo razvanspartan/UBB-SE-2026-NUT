@@ -1,23 +1,25 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
-using TeamNut.ModelViews;
 using TeamNut.Models;
-using TeamNut.Services;
+using TeamNut.ModelViews;
+using TeamNut.Services.Interfaces;
 using TeamNut.ViewModels;
 
 namespace TeamNut.Views.MealPlanView
 {
     public sealed partial class MealPlanPage : Page
     {
-        public MealPlanViewModel ViewModel { get; } = new MealPlanViewModel();
-        private UserService _userService;
+        public MealPlanViewModel ViewModel { get; }
+        private IUserService _userService;
 
         public MealPlanPage()
         {
             this.InitializeComponent();
+            ViewModel = App.Services.GetRequiredService<MealPlanViewModel>();
             this.DataContext = ViewModel;
-            _userService = new UserService();
+            _userService = App.Services.GetRequiredService<IUserService>();
 
             ViewModel.PropertyChanged += (s, e) =>
             {

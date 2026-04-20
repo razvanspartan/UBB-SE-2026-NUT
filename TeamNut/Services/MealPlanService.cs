@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Repositories;
+using TeamNut.Repositories.Interfaces;
+using TeamNut.Services.Interfaces;
 
 namespace TeamNut.Services
 {
-    public class MealPlanService
+    public class MealPlanService : IMealPlanService
     {
-        private readonly MealPlanRepository _mealPlanRepository;
-        private readonly UserRepository _userRepository;
+        private readonly IMealPlanRepository _mealPlanRepository;
+        private readonly IUserRepository _userRepository;
 
-        public MealPlanService()
+        public MealPlanService(IMealPlanRepository mealPlanRepository, IUserRepository userRepository)
         {
-            _mealPlanRepository = new MealPlanRepository();
-            _userRepository = new UserRepository();
+            _mealPlanRepository = mealPlanRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<int> GeneratePersonalizedMealPlanAsync(int userId)
@@ -60,9 +62,9 @@ namespace TeamNut.Services
                             if (!string.IsNullOrWhiteSpace(meals[2].Name)) dinnerName = meals[2].Name.Trim();
                         }
 
-                        var breakfast = new Reminder { UserId = userId, Name = breakfastName, ReminderDate = todays, Time = new TimeSpan(8,0,0), HasSound = false, Frequency = "Once" };
-                        var lunch = new Reminder { UserId = userId, Name = lunchName, ReminderDate = todays, Time = new TimeSpan(13,0,0), HasSound = false, Frequency = "Once" };
-                        var dinner = new Reminder { UserId = userId, Name = dinnerName, ReminderDate = todays, Time = new TimeSpan(17,0,0), HasSound = false, Frequency = "Once" };
+                        var breakfast = new Reminder { UserId = userId, Name = breakfastName, ReminderDate = todays, Time = new TimeSpan(8, 0, 0), HasSound = false, Frequency = "Once" };
+                        var lunch = new Reminder { UserId = userId, Name = lunchName, ReminderDate = todays, Time = new TimeSpan(13, 0, 0), HasSound = false, Frequency = "Once" };
+                        var dinner = new Reminder { UserId = userId, Name = dinnerName, ReminderDate = todays, Time = new TimeSpan(17, 0, 0), HasSound = false, Frequency = "Once" };
 
                         await reminderService.SaveReminder(breakfast);
                         await reminderService.SaveReminder(lunch);

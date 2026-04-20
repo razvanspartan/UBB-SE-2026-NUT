@@ -9,7 +9,12 @@ namespace TeamNut.Repositories
 {
     internal class InventoryRepository : IInventoryRepository
     {
-        private readonly string _connectionString = DbConfig.ConnectionString;
+        private readonly string _connectionString;
+
+        public InventoryRepository(IDbConfig dbConfig)
+        {
+            _connectionString = dbConfig.ConnectionString;
+        }
 
         public async Task Add(Inventory entity)
         {
