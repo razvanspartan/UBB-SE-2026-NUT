@@ -6,12 +6,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TeamNut.Models;
+using TeamNut.Repositories.Interfaces;
 
 namespace TeamNut.Repositories
 {
-    internal class MealRepository : IRepository<Meal>
+    internal class MealRepository : IMealRepository
     {
-        private readonly string _connectionString = DbConfig.ConnectionString;
+        private readonly string _connectionString;
+
+        public MealRepository(IDbConfig dbConfig)
+        {
+            _connectionString = dbConfig.ConnectionString;
+        }
 
         public List<Meal> GetMeals()
         {
@@ -24,7 +30,7 @@ namespace TeamNut.Repositories
             var userId = UserSession.UserId ?? 0;
             var meals = new List<Meal>();
 
-           
+
             string baseSql = @"
         SELECT 
             m.meal_id, m.imageUrl, m.name, m.isKeto, m.isLactoseFree, 
@@ -43,26 +49,26 @@ namespace TeamNut.Repositories
             StringBuilder sql = new StringBuilder(baseSql);
             var cmd = new SqliteCommand();
 
-            
+
             if (filter.IsKeto) sql.Append(" AND m.isKeto = 1");
             if (filter.IsVegan) sql.Append(" AND m.isVegan = 1");
             if (filter.IsNutFree) sql.Append(" AND m.isNutFree = 1");
             if (filter.IsLactoseFree) sql.Append(" AND m.isLactoseFree = 1");
             if (filter.IsGlutenFree) sql.Append(" AND m.isGlutenFree = 1");
 
-            
+
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
             {
                 sql.Append(" AND m.name LIKE @search");
                 cmd.Parameters.AddWithValue("@search", $"%{filter.SearchTerm}%");
             }
 
-            
+
             sql.Append(@" GROUP BY 
         m.meal_id, m.imageUrl, m.name, m.isKeto, m.isLactoseFree, 
         m.isNutFree, m.isVegan, m.isGlutenFree, m.description");
 
-            
+
             using var conn = new SqliteConnection(_connectionString);
             cmd.Connection = conn;
             cmd.CommandText = sql.ToString();
@@ -101,7 +107,7 @@ namespace TeamNut.Repositories
             }
         }
 
-       
+
 
         public async Task<IEnumerable<Meal>> GetAll()
         {
@@ -174,7 +180,7 @@ namespace TeamNut.Repositories
                 Carbs = Convert.ToInt32(reader["carbs"]),
                 Fat = Convert.ToInt32(reader["fat"]),
                 */
-               
+
                 Id = (int)Convert.ToInt64(reader["meal_id"]),
                 Name = reader["name"].ToString(),
                 ImageUrl = reader["imageUrl"]?.ToString(),

@@ -4,12 +4,13 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Services;
+using TeamNut.Services.Interfaces;
 
 namespace TeamNut.ViewModels
 {
     public partial class MealSearchViewModel : ObservableObject
     {
-        private readonly MealService _mealService;
+        private readonly IMealService _mealService;
 
         public ObservableCollection<Meal> Meals { get; private set; } = new ObservableCollection<Meal>();
 
@@ -17,9 +18,9 @@ namespace TeamNut.ViewModels
 
         public Meal? SelectedMeal { get; set; }
 
-        public MealSearchViewModel()
+        public MealSearchViewModel(IMealService mealService)
         {
-            _mealService = new MealService();
+            _mealService = mealService;
             _ = LoadMealsAsync();
         }
 

@@ -3,17 +3,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using TeamNut.Models;
 using TeamNut.Repositories;
+using TeamNut.Repositories.Interfaces;
 using TeamNut.Services.Interfaces;
 
 namespace TeamNut.Services
 {
     public class MealService : IMealService
     {
-        private readonly MealRepository _mealRepository;
+        private readonly IMealRepository _mealRepository;
 
-        public MealService()
+        public MealService(IMealRepository mealRepository)
         {
-            _mealRepository = new MealRepository();
+            _mealRepository = mealRepository;
         }
 
 

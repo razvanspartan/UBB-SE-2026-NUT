@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
@@ -10,7 +11,7 @@ namespace TeamNut
 {
     public sealed partial class MealsPage : Page
     {
-        private MealSearchViewModel viewModel;
+        private MealSearchViewModel viewModel { get; }
         private int currentPage = 1;
         private int pageSize = 5;
         private List<Meal> allMeals = new List<Meal>();
@@ -18,8 +19,8 @@ namespace TeamNut
         public MealsPage()
         {
             this.InitializeComponent();
-            viewModel = new MealSearchViewModel();
-            
+            viewModel = App.Services.GetService<MealSearchViewModel>();
+
             Loaded += (s, e) => btnSearch_Click(this, new RoutedEventArgs());
         }
 

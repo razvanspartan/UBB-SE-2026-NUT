@@ -9,6 +9,7 @@ using TeamNut.Services;
 using TeamNut.Services.Interfaces;
 using TeamNut.ViewModels;
 using TeamNut.Views;
+using TeamNut.Views.MealPlanView;
 using TeamNut.Views.UserView;
 
 namespace TeamNut
@@ -63,6 +64,9 @@ namespace TeamNut
             services.AddTransient<IMealPlanService, MealPlanService>();
             services.AddTransient<MealPlanViewModel>();
 
+            services.AddTransient<IMealRepository, MealRepository>();
+            services.AddTransient<IMealService, MealService>();
+            services.AddTransient<MealSearchViewModel>();
 
 
             return services.BuildServiceProvider();
