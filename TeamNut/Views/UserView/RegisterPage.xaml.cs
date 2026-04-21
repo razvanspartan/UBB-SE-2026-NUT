@@ -1,28 +1,19 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using TeamNut.ViewModels; 
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Microsoft.Extensions.DependencyInjection;
-
-
+using TeamNut.ViewModels;
 
 namespace TeamNut.Views.UserView
 {
+    /// <summary>Page for new user registration.</summary>
     public sealed partial class RegisterPage : Page
     {
+        /// <summary>Gets the shared user view model.</summary>
         public UserViewModel ViewModel { get; }
+
+        /// <summary>Initializes a new instance of the <see cref="RegisterPage"/> class.</summary>
         public RegisterPage()
         {
             InitializeComponent();
@@ -31,19 +22,23 @@ namespace TeamNut.Views.UserView
             ViewModel.RegistrationValid += ViewModel_RegistrationValid;
         }
 
+        /// <summary>Subscribes to login events when navigated to.</summary>
+        /// <param name="e">Navigation event arguments.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             ViewModel.LoginSuccess += ViewModel_LoginSuccess;
         }
 
+        /// <summary>Unsubscribes from login events when navigated away.</summary>
+        /// <param name="e">Navigation event arguments.</param>
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
             ViewModel.LoginSuccess -= ViewModel_LoginSuccess;
         }
 
-        private void ViewModel_LoginSuccess(object sender, EventArgs e)
+        private void ViewModel_LoginSuccess(object? sender, EventArgs e)
         {
             if (this.Frame != null)
             {
@@ -58,6 +53,7 @@ namespace TeamNut.Views.UserView
                 ViewModel.CurrentUser.Password = pwBox.Password;
             }
         }
+
         private void ToLogin_Click(object sender, RoutedEventArgs e)
         {
             if (this.Frame != null)
@@ -65,9 +61,10 @@ namespace TeamNut.Views.UserView
                 this.Frame.Navigate(typeof(LoginPage));
             }
         }
-        private void ViewModel_RegistrationValid(object sender, EventArgs e)
+
+        private void ViewModel_RegistrationValid(object? sender, EventArgs e)
         {
-            this.Frame.Navigate(typeof(UserDataPage), ViewModel.CurrentUser);
+            this.Frame?.Navigate(typeof(UserDataPage), ViewModel.CurrentUser);
         }
     }
 }

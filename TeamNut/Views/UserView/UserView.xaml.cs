@@ -1,39 +1,31 @@
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
 namespace TeamNut.Views.UserView
 {
+    /// <summary>Host control that navigates between login, register, and user-data pages.</summary>
     public sealed partial class UserView : UserControl
     {
+        /// <summary>Initializes a new instance of the <see cref="UserView"/> class.</summary>
         public UserView()
         {
             this.InitializeComponent();
-            displayRegisterView();
+            DisplayRegisterView();
         }
 
-        public void displayRegisterView()
+        /// <summary>Navigates to the registration page.</summary>
+        public void DisplayRegisterView()
         {
             RootFrame.Navigate(typeof(RegisterPage));
         }
 
-        public void displayLoginView()
+        /// <summary>Navigates to the login page.</summary>
+        public void DisplayLoginView()
         {
             RootFrame.Navigate(typeof(LoginPage));
         }
 
-        public void displayUserDataView()
+        /// <summary>Navigates to the user data page.</summary>
+        public void DisplayUserDataView()
         {
             RootFrame.Navigate(typeof(UserDataPage));
         }

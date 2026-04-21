@@ -1,28 +1,25 @@
-using TeamNut.Models;
-using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
+using TeamNut.Models;
 using TeamNut;
 using TeamNut.Repositories.Interfaces;
-
 
 namespace TeamNut.Repositories
 {
     internal class ReminderRepository : IReminderRepository
     {
-
-        private readonly string _connectionString;
+        private readonly string connectionString;
 
         public ReminderRepository(IDbConfig dbConfig)
         {
-            _connectionString = dbConfig.ConnectionString;
+            connectionString = dbConfig.ConnectionString;
         }
 
-        public async Task<Reminder> GetById(int id)
+        public async Task<Reminder?> GetById(int id)
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             const string sql = "SELECT * FROM Reminders WHERE id = @id";
             using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", id);
@@ -36,11 +33,10 @@ namespace TeamNut.Repositories
             return null;
         }
 
-
         public async Task<IEnumerable<Reminder>> GetAll()
         {
             var reminders = new List<Reminder>();
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             const string sql = "SELECT * FROM Reminders";
             using var cmd = new SqliteCommand(sql, conn);
 
@@ -53,11 +49,10 @@ namespace TeamNut.Repositories
             return reminders;
         }
 
-
         public async Task<IEnumerable<Reminder>> GetAllByUserId(int userId)
         {
             var reminders = new List<Reminder>();
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             const string sql = "SELECT * FROM Reminders WHERE user_id = @uid";
             using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@uid", userId);
@@ -73,23 +68,20 @@ namespace TeamNut.Repositories
 
         public async Task Add(Reminder entity)
         {
-            using var conn = new SqliteConnection(_connectionString);
-
-            const string sql = @"INSERT INTO Reminders (user_id, name, has_sound, time, reminder_date, frequency) 
+            using var conn = new SqliteConnection(connectionString);
+            const string sql = @"INSERT INTO Reminders (user_id, name, has_sound, time, reminder_date, frequency)
                         VALUES (@uid, @name, @sound, @time, @date, @freq)";
 
             using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@uid", entity.UserId);
             cmd.Parameters.AddWithValue("@name", entity.Name);
             cmd.Parameters.AddWithValue("@sound", entity.HasSound ? 1 : 0);
-
             cmd.Parameters.AddWithValue("@time", entity.Time.ToString());
             cmd.Parameters.AddWithValue("@date", entity.ReminderDate);
             cmd.Parameters.AddWithValue("@freq", entity.Frequency ?? string.Empty);
 
             await conn.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
-
 
             using var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn);
             var scalar = await idCmd.ExecuteScalarAsync();
@@ -101,11 +93,10 @@ namespace TeamNut.Repositories
 
         public async Task Update(Reminder entity)
         {
-            using var conn = new SqliteConnection(_connectionString);
-
-            const string sql = @"UPDATE Reminders 
-                         SET name = @name, has_sound = @sound, time = @time, 
-                             reminder_date = @date, frequency = @freq 
+            using var conn = new SqliteConnection(connectionString);
+            const string sql = @"UPDATE Reminders
+                         SET name = @name, has_sound = @sound, time = @time,
+                             reminder_date = @date, frequency = @freq
                          WHERE id = @id AND user_id = @uid";
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -122,22 +113,21 @@ namespace TeamNut.Repositories
 
         private Reminder MapReaderToReminder(SqliteDataReader reader)
         {
-
             return new Reminder
             {
                 Id = Convert.ToInt32(reader["id"]),
                 UserId = Convert.ToInt32(reader["user_id"]),
-                Name = reader["name"].ToString(),
+                Name = reader["name"]?.ToString() ?? string.Empty,
                 HasSound = Convert.ToBoolean(reader["has_sound"]),
-                Time = TimeSpan.Parse(reader["time"].ToString()),
-                ReminderDate = reader["reminder_date"].ToString(),
-                Frequency = reader["frequency"].ToString()
+                Time = TimeSpan.Parse(reader["time"]?.ToString() ?? "00:00:00"),
+                ReminderDate = reader["reminder_date"]?.ToString() ?? string.Empty,
+                Frequency = reader["frequency"]?.ToString() ?? string.Empty,
             };
         }
 
         public async Task Delete(int id)
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             const string sql = "DELETE FROM Reminders WHERE id = @id";
             using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", id);
@@ -146,15 +136,14 @@ namespace TeamNut.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task<Reminder> GetNextReminder(int userId)
+        public async Task<Reminder?> GetNextReminder(int userId)
         {
-            using var conn = new SqliteConnection(_connectionString);
-
-            const string sql = @"SELECT * FROM Reminders 
-                         WHERE user_id = @uid AND 
-                         (reminder_date > date('now', 'localtime') 
+            using var conn = new SqliteConnection(connectionString);
+            const string sql = @"SELECT * FROM Reminders
+                         WHERE user_id = @uid AND
+                         (reminder_date > date('now', 'localtime')
                           OR (reminder_date = date('now', 'localtime') AND time >= time('now', 'localtime')))
-                         ORDER BY reminder_date ASC, time ASC 
+                         ORDER BY reminder_date ASC, time ASC
                          LIMIT 1";
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -164,8 +153,5 @@ namespace TeamNut.Repositories
             using var reader = await cmd.ExecuteReaderAsync();
             return await reader.ReadAsync() ? MapReaderToReminder(reader) : null;
         }
-
-
-
     }
 }

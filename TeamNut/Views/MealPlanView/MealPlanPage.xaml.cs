@@ -1,7 +1,8 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
+using TeamNut.ModelViews;
 using TeamNut.Models;
 using TeamNut.ModelViews;
 using TeamNut.Services.Interfaces;
@@ -9,17 +10,61 @@ using TeamNut.ViewModels;
 
 namespace TeamNut.Views.MealPlanView
 {
+    /// <summary>Page for displaying and managing the user's daily meal plan.</summary>
     public sealed partial class MealPlanPage : Page
     {
+        /// <summary>Gets the view model.</summary>
         public MealPlanViewModel ViewModel { get; }
-        private IUserService _userService;
+        private IUserService userService;
 
+        private const string ButtonOk = "OK";
+        private const string ButtonSave = "Save";
+        private const string ButtonCancel = "Cancel";
+        private const string GenderMale = "male";
+        private const string GenderFemale = "female";
+        private const string TitleNotLoggedIn = "Not Logged In";
+        private const string TitleNoDataFound = "No Data Found";
+        private const string TitleInvalidInput = "Invalid Input";
+        private const string TitleSettingsUpdated = "Settings Updated";
+        private const string TitleError = "Error";
+        private const string TitleNoMealPlan = "No Meal Plan";
+        private const string TitleNoMeals = "No Meals";
+        private const string TitleSuccess = "Success";
+        private const string TitleSaveFailed = "Save Failed";
+        private const string TitleRegenerationFailed = "Regeneration Failed";
+        private const string TitleUpdatePreferences = "Update Your Preferences";
+        private const string MsgLoginRequired = "You must be logged in to update your settings.";
+        private const string MsgNoUserData = "No user data found. Please complete your profile first.";
+        private const string MsgInvalidWeightHeight = "Weight and height must be positive numbers.";
+        private const string MsgSettingsSaved = "Your preferences have been saved successfully!\n\n" + "Your new preferences will be applied to tomorrow's meal plan, which will be automatically generated when you log in.\n\n" + "Today's meal plan will remain unchanged.";
+        private const string MsgSettingsStatus = "Settings saved! New preferences will apply to tomorrow's meal plan.";
+        private const string MsgNoMealPlanLoaded = "No meal plan is currently loaded. Please generate a meal plan first.";
+        private const string MsgNoMealsGenerated = "No meals to save. Please generate a meal plan first.";
+        private const string MsgPreferenceInfo = "Changes will be reflected in your next meal plan generation.";
+        private const string MealBullet = "ù";
+        private const string KcalUnit = "kcal";
+        private const int WeightMin = 1;
+        private const int WeightMax = 500;
+        private const int HeightMin = 1;
+        private const int HeightMax = 300;
+        private const int StackPanelSpacing = 15;
+        private const double InfoTextOpacity = 0.7;
+        private const int InfoFontSize = 12;
+        private const int InfoTopMargin = 10;
+        private const int IndexMale = 0;
+        private const int IndexFemale = 1;
+        private const int GoalBulk = 0;
+        private const int GoalCut = 1;
+        private const int GoalMaintenance = 2;
+        private const int GoalWellBeing = 3;
+
+        /// <summary>Initializes a new instance of the <see cref="MealPlanPage"/> class.</summary>
         public MealPlanPage()
         {
             this.InitializeComponent();
             ViewModel = App.Services.GetRequiredService<MealPlanViewModel>();
             this.DataContext = ViewModel;
-            _userService = App.Services.GetRequiredService<IUserService>();
+            userService = App.Services.GetRequiredService<IUserService>();
 
             ViewModel.PropertyChanged += (s, e) =>
             {
@@ -45,10 +90,7 @@ namespace TeamNut.Views.MealPlanView
                 }
             };
 
-            ViewModel.GeneratedMeals.CollectionChanged += (s, e) =>
-            {
-                UpdateMealsList();
-            };
+            ViewModel.GeneratedMeals.CollectionChanged += (s, e) => UpdateMealsList();
 
             _ = ViewModel.LoadOrGenerateTodaysMealPlanAsync();
         }
@@ -59,29 +101,15 @@ namespace TeamNut.Views.MealPlanView
 
             if (userId == null || userId <= 0)
             {
-                var errorDialog = new ContentDialog
-                {
-                    Title = "Not Logged In",
-                    Content = "You must be logged in to update your settings.",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                _ = await errorDialog.ShowAsync();
+                await ShowSimpleDialog(TitleNotLoggedIn, MsgLoginRequired);
                 return;
             }
 
-            var userData = await _userService.GetUserDataAsync(userId.Value);
+            var userData = await userService.GetUserDataAsync(userId.Value);
 
             if (userData == null)
             {
-                var errorDialog = new ContentDialog
-                {
-                    Title = "No Data Found",
-                    Content = "No user data found. Please complete your profile first.",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                _ = await errorDialog.ShowAsync();
+                await ShowSimpleDialog(TitleNoDataFound, MsgNoUserData);
                 return;
             }
 
@@ -92,44 +120,43 @@ namespace TeamNut.Views.MealPlanView
         {
             var dialog = new ContentDialog
             {
-                Title = "Update Your Preferences",
-                PrimaryButtonText = "Save",
-                CloseButtonText = "Cancel",
+                Title = TitleUpdatePreferences,
+                PrimaryButtonText = ButtonSave,
+                CloseButtonText = ButtonCancel,
                 DefaultButton = ContentDialogButton.Primary,
-                XamlRoot = this.XamlRoot
+                XamlRoot = XamlRoot
             };
 
-            var stackPanel = new StackPanel { Spacing = 15 };
+            var panel = new StackPanel { Spacing = StackPanelSpacing };
 
             var weightBox = new NumberBox
             {
                 Header = "Weight (kg)",
                 Value = userData.Weight,
-                Minimum = 1,
-                Maximum = 500,
+                Minimum = WeightMin,
+                Maximum = WeightMax,
                 SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact
             };
-            stackPanel.Children.Add(weightBox);
 
             var heightBox = new NumberBox
             {
                 Header = "Height (cm)",
                 Value = userData.Height,
-                Minimum = 1,
-                Maximum = 300,
+                Minimum = HeightMin,
+                Maximum = HeightMax,
                 SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact
             };
-            stackPanel.Children.Add(heightBox);
 
             var genderCombo = new ComboBox
             {
                 Header = "Gender",
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                SelectedIndex = userData.Gender.Equals("male", StringComparison.OrdinalIgnoreCase) ? 0 : 1
+                SelectedIndex = userData.Gender.Equals(GenderMale, StringComparison.OrdinalIgnoreCase)
+                    ? IndexMale
+                    : IndexFemale
             };
             genderCombo.Items.Add("Male");
             genderCombo.Items.Add("Female");
-            stackPanel.Children.Add(genderCombo);
 
             var goalCombo = new ComboBox
             {
@@ -143,114 +170,63 @@ namespace TeamNut.Views.MealPlanView
 
             goalCombo.SelectedIndex = userData.Goal.ToLower() switch
             {
-                "bulk" => 0,
-                "cut" => 1,
-                "maintenance" => 2,
-                "well-being" => 3,
-                _ => 2
+                "bulk" => GoalBulk,
+                "cut" => GoalCut,
+                "maintenance" => GoalMaintenance,
+                "well-being" => GoalWellBeing,
+                _ => GoalMaintenance
             };
-            stackPanel.Children.Add(goalCombo);
 
             var infoText = new TextBlock
             {
-                Text = "Changes will be reflected in your next meal plan generation.",
+                Text = MsgPreferenceInfo,
                 TextWrapping = TextWrapping.Wrap,
-                Opacity = 0.7,
-                FontSize = 12,
-                Margin = new Thickness(0, 10, 0, 0)
+                Opacity = InfoTextOpacity,
+                FontSize = InfoFontSize,
+                Margin = new Thickness(0, InfoTopMargin, 0, 0)
             };
-            stackPanel.Children.Add(infoText);
 
-            dialog.Content = stackPanel;
+            panel.Children.Add(weightBox);
+            panel.Children.Add(heightBox);
+            panel.Children.Add(genderCombo);
+            panel.Children.Add(goalCombo);
+            panel.Children.Add(infoText);
 
-            var result = await dialog.ShowAsync();
+            dialog.Content = panel;
 
-            if (result == ContentDialogResult.Primary)
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
             {
-                if (weightBox.Value < 1 || heightBox.Value < 1)
-                {
-                    var validationDialog = new ContentDialog
-                    {
-                        Title = "Invalid Input",
-                        Content = "Weight and height must be positive numbers.",
-                        CloseButtonText = "OK",
-                        XamlRoot = this.XamlRoot
-                    };
-                    _ = await validationDialog.ShowAsync();
-                    return;
-                }
-
-                userData.Weight = (int)weightBox.Value;
-                userData.Height = (int)heightBox.Value;
-                userData.Gender = genderCombo.SelectedIndex == 0 ? "male" : "female";
-                var goalText = goalCombo.SelectedItem?.ToString();
-                if (string.IsNullOrWhiteSpace(goalText))
-                {
-                    var goalDialog = new ContentDialog
-                    {
-                        Title = "Invalid Input",
-                        Content = "Please select a goal.",
-                        CloseButtonText = "OK",
-                        XamlRoot = this.XamlRoot
-                    };
-                    _ = await goalDialog.ShowAsync();
-                    return;
-                }
-
-                userData.Goal = goalText.ToLowerInvariant();
-
-                userData.Bmi = userData.CalculateBmi();
-                userData.CalorieNeeds = userData.CalculateCalorieNeeds();
-                userData.ProteinNeeds = userData.CalculateProteinNeeds();
-                userData.CarbNeeds = userData.CalculateCarbNeeds();
-                userData.FatNeeds = userData.CalculateFatNeeds();
-
-                try
-                {
-                    await _userService.UpdateUserDataAsync(userData);
-
-                    var successDialog = new ContentDialog
-                    {
-                        Title = "Settings Updated",
-                        Content = "Your preferences have been saved successfully!\n\nYour new preferences will be applied to tomorrow's meal plan, which will be automatically generated when you log in.\n\nToday's meal plan will remain unchanged.",
-                        CloseButtonText = "OK",
-                        XamlRoot = this.XamlRoot
-                    };
-                    _ = await successDialog.ShowAsync();
-
-                    StatusMessageText.Text = "Settings saved! New preferences will apply to tomorrow's meal plan.";
-                }
-                catch (Exception ex)
-                {
-                    var errorDialog = new ContentDialog
-                    {
-                        Title = "Error",
-                        Content = $"Failed to update settings: {ex.Message}",
-                        CloseButtonText = "OK",
-                        XamlRoot = this.XamlRoot
-                    };
-                    _ = await errorDialog.ShowAsync();
-                }
+                return;
             }
-        }
 
-        private async void ShowErrorDialog()
-        {
-            var dialog = new ContentDialog
+            if (weightBox.Value < WeightMin || heightBox.Value < HeightMin)
             {
-                Title = ViewModel.ErrorDialogTitle,
-                Content = ViewModel.ErrorDialogMessage,
-                CloseButtonText = "OK",
-                XamlRoot = this.XamlRoot
-            };
+                await ShowSimpleDialog(TitleInvalidInput, MsgInvalidWeightHeight);
+                return;
+            }
 
-            _ = await dialog.ShowAsync();
-            ViewModel.ShowErrorDialog = false; // Reset the flag
-        }
+            userData.Weight = (int)weightBox.Value;
+            userData.Height = (int)heightBox.Value;
+            userData.Gender = genderCombo.SelectedIndex == IndexMale ? GenderMale : GenderFemale;
+            userData.Goal = goalCombo.SelectedItem?.ToString()?.ToLower() ?? "maintenance";
 
-        private void UpdateMealsList()
-        {
-            MealsListView.ItemsSource = ViewModel.GeneratedMeals;
+            userData.Bmi = userData.CalculateBmi();
+            userData.CalorieNeeds = userData.CalculateCalorieNeeds();
+            userData.ProteinNeeds = userData.CalculateProteinNeeds();
+            userData.CarbNeeds = userData.CalculateCarbNeeds();
+            userData.FatNeeds = userData.CalculateFatNeeds();
+
+            try
+            {
+                await userService.UpdateUserDataAsync(userData);
+
+                await ShowSimpleDialog(TitleSettingsUpdated, MsgSettingsSaved);
+                StatusMessageText.Text = MsgSettingsStatus;
+            }
+            catch (Exception ex)
+            {
+                await ShowSimpleDialog(TitleError, $"Failed to update settings: {ex.Message}");
+            }
         }
 
         private async void SaveToDailyLogButton_Click(object sender, RoutedEventArgs e)
@@ -259,59 +235,53 @@ namespace TeamNut.Views.MealPlanView
             {
                 if (ViewModel.CurrentMealPlanId <= 0)
                 {
-                    var errorDialog = new ContentDialog
-                    {
-                        Title = "No Meal Plan",
-                        Content = "No meal plan is currently loaded. Please generate a meal plan first.",
-                        CloseButtonText = "OK",
-                        XamlRoot = this.XamlRoot
-                    };
-                    await errorDialog.ShowAsync();
+                    await ShowSimpleDialog(TitleNoMealPlan, MsgNoMealPlanLoaded);
                     return;
                 }
 
                 if (ViewModel.GeneratedMeals.Count == 0)
                 {
-                    var errorDialog = new ContentDialog
-                    {
-                        Title = "No Meals",
-                        Content = "No meals to save. Please generate a meal plan first.",
-                        CloseButtonText = "OK",
-                        XamlRoot = this.XamlRoot
-                    };
-                    await errorDialog.ShowAsync();
+                    await ShowSimpleDialog(TitleNoMeals, MsgNoMealsGenerated);
                     return;
                 }
 
                 await ViewModel.SaveToDailyLogAsync();
 
-                var messageText = $"Successfully saved {ViewModel.GeneratedMeals.Count} meals to daily log:\n\n";
+                var message = $"Successfully saved {ViewModel.GeneratedMeals.Count} meals:\n\n";
                 foreach (var meal in ViewModel.GeneratedMeals)
                 {
-                    messageText += $"ï {meal.Name}: {meal.Calories} kcal\n";
+                    message += $"{MealBullet} {meal.Name}: {meal.Calories} {KcalUnit}\n";
                 }
 
-                var successDialog = new ContentDialog
-                {
-                    Title = "Success",
-                    Content = messageText,
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await successDialog.ShowAsync();
+                await ShowSimpleDialog(TitleSuccess, message);
 
-                StatusMessageText.Text = $"All {ViewModel.GeneratedMeals.Count} meals saved to daily log!";
+                StatusMessageText.Text =
+                    $"All {ViewModel.GeneratedMeals.Count} meals saved to daily log!";
             }
             catch (Exception ex)
             {
-                var errorDialog = new ContentDialog
-                {
-                    Title = "Save Failed",
-                    Content = $"Failed to save to daily log:\n\n{ex.Message}",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await errorDialog.ShowAsync();
+                await ShowSimpleDialog(
+                    TitleSaveFailed,
+                    $"Failed to save to daily log:\n\n{ex.Message}");
+            }
+        }
+
+        private async void AddMealToLogsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { DataContext: MealViewModel meal })
+            {
+                return;
+            }
+
+            try
+            {
+                var mealPlanService = App.Services.GetRequiredService<IMealPlanService>();
+                await mealPlanService.SaveMealToDailyLogAsync(meal.Id, meal.Calories);
+                StatusMessageText.Text = $"{meal.Name} saved to daily log.";
+            }
+            catch (Exception ex)
+            {
+                await ShowSimpleDialog(TitleSaveFailed, $"Failed to save meal:\n\n{ex.Message}");
             }
         }
 
@@ -319,43 +289,40 @@ namespace TeamNut.Views.MealPlanView
         {
             try
             {
-                await ViewModel.RegenerateMealPlanForTestingAsync();
-                UpdateMealsList();
+                StatusMessageText.Text = "Regenerating meal plan...";
+                await ViewModel.LoadOrGenerateTodaysMealPlanAsync();
             }
             catch (Exception ex)
             {
-                var errorDialog = new ContentDialog
-                {
-                    Title = "Regeneration Failed",
-                    Content = ex.Message,
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await errorDialog.ShowAsync();
+                await ShowSimpleDialog(TitleRegenerationFailed, ex.Message);
             }
         }
 
-        private async void AddMealToLogsButton_Click(object sender, RoutedEventArgs e)
+        private async void ShowErrorDialog()
         {
-            try
+            await ShowSimpleDialog(
+                ViewModel.ErrorDialogTitle,
+                ViewModel.ErrorDialogMessage);
+
+            ViewModel.ShowErrorDialog = false;
+        }
+
+        private async System.Threading.Tasks.Task ShowSimpleDialog(string title, string content)
+        {
+            var dialog = new ContentDialog
             {
-                if (sender is Button btn && btn.DataContext is MealViewModel meal)
-                {
-                    await ViewModel.SaveMealToDailyLogAsync(meal.Id);
-                    StatusMessageText.Text = $"{meal.Name} added to daily log.";
-                }
-            }
-            catch (Exception ex)
-            {
-                var errorDialog = new ContentDialog
-                {
-                    Title = "Save Failed",
-                    Content = $"Failed to add meal to daily log:\n\n{ex.Message}",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await errorDialog.ShowAsync();
-            }
+                Title = title,
+                Content = content,
+                CloseButtonText = ButtonOk,
+                XamlRoot = XamlRoot
+            };
+
+            await dialog.ShowAsync();
+        }
+
+        private void UpdateMealsList()
+        {
+            MealsListView.ItemsSource = ViewModel.GeneratedMeals;
         }
     }
 }

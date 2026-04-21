@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TeamNut.Models;
@@ -8,24 +7,45 @@ namespace TeamNut.Services
 {
     public class ChatService : IChatService
     {
-        private readonly IChatRepository _repo;
-        public ChatService(IChatRepository repo)
+        private readonly IChatRepository repo;
+        public ChatService(IChatRepository rrepo)
         {
-            _repo = repo;
+            repo = rrepo;
         }
 
-        public Task<IEnumerable<Conversation>> GetAllConversationsAsync() => _repo.GetAllConversationsAsync();
+        /// <summary>Gets all conversations.</summary>
+        /// <returns>All conversations in the system.</returns>
+        public Task<IEnumerable<Conversation>> GetAllConversationsAsync() => repo.GetAllConversationsAsync();
 
-        public Task<Conversation> GetOrCreateConversationForUserAsync(int userId) => _repo.GetOrCreateConversationForUserAsync(userId);
+        /// <summary>Gets or creates a conversation for the given user.</summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <returns>The existing or newly created conversation.</returns>
+        public Task<Conversation> GetOrCreateConversationForUserAsync(int userId) => repo.GetOrCreateConversationForUserAsync(userId);
 
-        public Task<IEnumerable<Message>> GetMessagesForConversationAsync(int conversationId) => _repo.GetMessagesForConversationAsync(conversationId);
+        /// <summary>Gets messages for the given conversation.</summary>
+        /// <param name="conversationId">The conversation identifier.</param>
+        /// <returns>All messages in the conversation.</returns>
+        public Task<IEnumerable<Message>> GetMessagesForConversationAsync(int conversationId) => repo.GetMessagesForConversationAsync(conversationId);
 
-        public Task<IEnumerable<Conversation>> GetConversationsWithMessagesAsync() => _repo.GetConversationsWithMessagesAsync();
+        /// <summary>Gets conversations that contain at least one message.</summary>
+        /// <returns>Conversations with messages.</returns>
+        public Task<IEnumerable<Conversation>> GetConversationsWithMessagesAsync() => repo.GetConversationsWithMessagesAsync();
 
-        public Task<IEnumerable<Conversation>> GetConversationsWhereNutritionistRespondedAsync(int nutritionistId) => _repo.GetConversationsWhereNutritionistRespondedAsync(nutritionistId);
+        /// <summary>Gets conversations where a specific nutritionist has responded.</summary>
+        /// <param name="nutritionistId">The nutritionist user identifier.</param>
+        /// <returns>Conversations the nutritionist responded to.</returns>
+        public Task<IEnumerable<Conversation>> GetConversationsWhereNutritionistRespondedAsync(int nutritionistId) => repo.GetConversationsWhereNutritionistRespondedAsync(nutritionistId);
 
-        public Task AddMessageAsync(int conversationId, int senderId, string text, bool isNutritionist) => _repo.AddMessageAsync(conversationId, senderId, text, isNutritionist);
+        /// <summary>Adds a message to a conversation.</summary>
+        /// <param name="conversationId">The conversation identifier.</param>
+        /// <param name="senderId">The sender's user identifier.</param>
+        /// <param name="text">The message text.</param>
+        /// <param name="isNutritionist"><c>true</c> if the sender is a nutritionist.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public Task AddMessageAsync(int conversationId, int senderId, string text, bool isNutritionist) => repo.AddMessageAsync(conversationId, senderId, text, isNutritionist);
 
-        public Task<IEnumerable<Conversation>> GetConversationsWithUserMessagesAsync() => _repo.GetConversationsWithUserMessagesAsync();
+        /// <summary>Gets conversations that have unanswered user messages.</summary>
+        /// <returns>Conversations with unanswered messages.</returns>
+        public Task<IEnumerable<Conversation>> GetConversationsWithUserMessagesAsync() => repo.GetConversationsWithUserMessagesAsync();
     }
 }

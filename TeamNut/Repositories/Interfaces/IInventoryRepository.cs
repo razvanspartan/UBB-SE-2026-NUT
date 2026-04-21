@@ -7,6 +7,5 @@ namespace TeamNut.Repositories.Interfaces
     public interface IInventoryRepository : IRepository<Inventory>
     {
         Task<IEnumerable<Inventory>> GetAllByUserId(int userId);
-
     }
 }

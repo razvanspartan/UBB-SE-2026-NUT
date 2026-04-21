@@ -1,158 +1,229 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Threading.Tasks;
-
 using TeamNut.Models;
 using TeamNut.Services;
 using TeamNut.Services.Interfaces;
 
 namespace TeamNut.ViewModels
 {
-
+    /// <summary>View model for managing the user's shopping list.</summary>
     public partial class ShoppingListViewModel : ObservableObject
     {
-        private readonly IShoppingListService _shoppingListService;
+        private readonly IShoppingListService shoppingListService;
+        private const double DefaultPendingQuantity = 100;
+        private const int StatusDisplayDurationMs = 3000;
+        private const string StatusAddSuccessFormat = "Updated '{0}' successfully!";
+        private const string StatusMoveToPantryFormat = "Moved '{0}' to Pantry.";
+        private const string StatusItemRemoved = "Item removed from list.";
+        private const string StatusAlreadyComplete = "You already have everything you need";
+        private const string StatusGenerateSuccessFormat = "Successfully generated {0} new items from your Meal Plan!";
+        private const string ErrorAddItem = "Database error: Could not add item.";
+        private const string ErrorUpdateChecked = "Failed to save checkmark state.";
+        private const string ErrorMoveToPantry = "Failed to move item to Pantry.";
+        private const string ErrorDeleteItem = "Failed to delete item from database.";
+        private const string ErrorGenerateList = "Error analyzing Meal Plan for ingredients.";
 
+        /// <summary>Gets or sets the collection of shopping list items.</summary>
         [ObservableProperty]
-        private ObservableCollection<ShoppingItem> items = new ObservableCollection<ShoppingItem>();
+        public partial ObservableCollection<ShoppingItem> Items { get; set; }
 
+        /// <summary>Gets or sets the status message shown to the user.</summary>
         [ObservableProperty]
-        private string statusMessage;
+        public partial string StatusMessage { get; set; }
 
+        /// <summary>Gets or sets a value indicating whether the status message is visible.</summary>
         [ObservableProperty]
-        private bool isStatusVisible;
+        public partial bool IsStatusVisible { get; set; }
 
+        /// <summary>Gets or sets a value indicating whether the status represents an error.</summary>
         [ObservableProperty]
-        private bool isError;
+        public partial bool IsError { get; set; }
 
+        /// <summary>Gets or sets the quantity in grams for the next item to add.</summary>
         [ObservableProperty]
-        private double pendingQuantity = 100; // Default to 100g
+        public partial double PendingQuantity { get; set; }
 
-        public ShoppingListViewModel(IShoppingListService shoppingListService)
+        public ShoppingListViewModel(IShoppingListService sshoppingListService)
         {
-            _shoppingListService = shoppingListService;
+            Items = new ObservableCollection<ShoppingItem>();
+            StatusMessage = string.Empty;
+            PendingQuantity = DefaultPendingQuantity;
+            shoppingListService = sshoppingListService;
             _ = LoadItemsAsync();
         }
 
+        /// <summary>Loads shopping list items for the current user.</summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LoadItemsAsync()
         {
-            if (UserSession.UserId == null) return;
+            if (UserSession.UserId == null)
+            {
+                return;
+            }
 
-            var loadedItems = await _shoppingListService.GetShoppingItemsAsync(UserSession.UserId.Value);
-            
+            var loadedItems =
+                await shoppingListService.GetShoppingItemsAsync(
+                    UserSession.UserId.Value);
+
             Items.Clear();
+
             foreach (var item in loadedItems)
             {
                 item.PropertyChanged += async (s, e) =>
                 {
-                    if (e.PropertyName == nameof(ShoppingItem.IsChecked))
+                    if (e.PropertyName == nameof(ShoppingItem.IsChecked) && s is ShoppingItem si)
                     {
-                        await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
+                        await shoppingListService.UpdateItemAsync(si);
                     }
                 };
+
                 Items.Add(item);
             }
         }
 
+        /// <summary>Adds a named ingredient to the shopping list.</summary>
+        /// <param name="itemName">The ingredient name to add.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [RelayCommand]
         public async Task AddItem(string itemName)
         {
-            if (!string.IsNullOrWhiteSpace(itemName) && UserSession.UserId != null)
+            if (string.IsNullOrWhiteSpace(itemName) || UserSession.UserId == null)
             {
-                var addedItem = await _shoppingListService.AddItemAsync(itemName.Trim(), UserSession.UserId.Value, PendingQuantity);
-                if (addedItem != null)
-                {
-                    var existing = System.Linq.Enumerable.FirstOrDefault(Items, i => i.Id == addedItem.Id);
-                    
-                    if (existing == null)
-                    {
-                        addedItem.PropertyChanged += async (s, e) =>
-                        {
-                            if (e.PropertyName == nameof(ShoppingItem.IsChecked))
-                            {
-                                bool updated = await _shoppingListService.UpdateItemAsync((ShoppingItem)s);
-                                if (!updated) ShowStatus("Failed to save checkmark state.", true);
-                            }
-                        };
-                        Items.Add(addedItem);
-                    }
-                    else
-                    {
-                        existing.QuantityGrams = addedItem.QuantityGrams;
-                    }
-
-                    ShowStatus($"Updated '{itemName}' successfully!", false);
-                    PendingQuantity = 100; // Reset to default
-                }
-                else
-                {
-                    ShowStatus("Database error: Could not add item.", true);
-                }
+                return;
             }
+
+            var addedItem = await shoppingListService.AddItemAsync(
+                itemName.Trim(),
+                UserSession.UserId.Value,
+                PendingQuantity);
+
+            if (addedItem == null)
+            {
+                ShowStatus(ErrorAddItem, true);
+                return;
+            }
+
+            var existing = Items.FirstOrDefault(i => i.Id == addedItem.Id);
+
+            if (existing == null)
+            {
+                addedItem.PropertyChanged += async (s, e) =>
+                {
+                    if (e.PropertyName == nameof(ShoppingItem.IsChecked) && s is ShoppingItem si)
+                    {
+                        bool updated = await shoppingListService.UpdateItemAsync(si);
+                        if (!updated)
+                        {
+                            ShowStatus(ErrorUpdateChecked, true);
+                        }
+                    }
+                };
+
+                Items.Add(addedItem);
+            }
+            else
+            {
+                existing.QuantityGrams = addedItem.QuantityGrams;
+            }
+
+            ShowStatus(
+                string.Format(StatusAddSuccessFormat, itemName),
+                false);
+
+            PendingQuantity = DefaultPendingQuantity;
         }
 
+        /// <summary>Moves a shopping item to the inventory (pantry).</summary>
+        /// <param name="item">The shopping item to move.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [RelayCommand]
         public async Task MoveToPantry(ShoppingItem item)
         {
-            if (item != null && Items.Contains(item))
+            if (item == null || !Items.Contains(item))
             {
-                bool success = await _shoppingListService.MoveToPantryAsync(item);
-                if (success)
-                {
-                    Items.Remove(item);
-                    ShowStatus($"Moved '{item.IngredientName}' to Pantry.", false);
-                }
-                else
-                {
-                    ShowStatus("Failed to move item to Pantry.", true);
-                }
+                return;
+            }
+
+            bool success = await shoppingListService.MoveToPantryAsync(item);
+
+            if (success)
+            {
+                Items.Remove(item);
+                ShowStatus(
+                    string.Format(StatusMoveToPantryFormat, item.IngredientName),
+                    false);
+            }
+            else
+            {
+                ShowStatus(ErrorMoveToPantry, true);
             }
         }
 
+        /// <summary>Removes an item from the shopping list.</summary>
+        /// <param name="item">The item to remove.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [RelayCommand]
         public async Task RemoveItem(ShoppingItem item)
         {
-            if (item != null && Items.Contains(item))
+            if (item == null || !Items.Contains(item))
             {
-                bool success = await _shoppingListService.RemoveItemAsync(item);
-                if (success)
-                {
-                    Items.Remove(item);
-                    ShowStatus("Item removed from list.", false);
-                }
-                else
-                {
-                    ShowStatus("Failed to delete item from database.", true);
-                }
+                return;
+            }
+
+            bool success = await shoppingListService.RemoveItemAsync(item);
+
+            if (success)
+            {
+                Items.Remove(item);
+                ShowStatus(StatusItemRemoved, false);
+            }
+            else
+            {
+                ShowStatus(ErrorDeleteItem, true);
             }
         }
 
+        /// <summary>Generates a shopping list from the user's current meal plan.</summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [RelayCommand]
         public async Task GenerateList()
         {
-            if (UserSession.UserId != null)
+            if (UserSession.UserId == null)
             {
-                int itemsAdded = await _shoppingListService.GenerateListAsync(UserSession.UserId.Value);
-                if (itemsAdded > 0)
-                {
-                    await LoadItemsAsync();
-                    ShowStatus($"Successfully generated {itemsAdded} new items from your Meal Plan!", false);
-                }
-                else if (itemsAdded == 0)
-                {
-                    ShowStatus("you already have everything you need", false);
-                }
-                else
-                {
-                    ShowStatus("Error analyzing Meal Plan for ingredients.", true);
-                }
+                return;
+            }
+
+            int itemsAdded =
+                await shoppingListService.GenerateListAsync(
+                    UserSession.UserId.Value);
+
+            if (itemsAdded > 0)
+            {
+                await LoadItemsAsync();
+                ShowStatus(
+                    string.Format(StatusGenerateSuccessFormat, itemsAdded),
+                    false);
+            }
+            else if (itemsAdded == 0)
+            {
+                ShowStatus(StatusAlreadyComplete, false);
+            }
+            else
+            {
+                ShowStatus(ErrorGenerateList, true);
             }
         }
 
-        public async Task<System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, string>>> SearchIngredientsAsync(string query)
+        /// <summary>Searches for ingredients matching the given query.</summary>
+        /// <param name="query">The search text.</param>
+        /// <returns>A list of ingredient id/name pairs matching the query.</returns>
+        public async Task<List<KeyValuePair<int, string>>> SearchIngredientsAsync(string query)
         {
-            return await _shoppingListService.SearchIngredientsAsync(query);
+            return await shoppingListService.SearchIngredientsAsync(query);
         }
 
         private void ShowStatus(string message, bool error)
@@ -160,8 +231,8 @@ namespace TeamNut.ViewModels
             StatusMessage = message;
             IsError = error;
             IsStatusVisible = true;
-            
-            Task.Delay(3000).ContinueWith(_ =>
+
+            Task.Delay(StatusDisplayDurationMs).ContinueWith(_ =>
             {
                 IsStatusVisible = false;
             }, TaskScheduler.FromCurrentSynchronizationContext());

@@ -1,27 +1,19 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using TeamNut.ViewModels;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Microsoft.Extensions.DependencyInjection;
-
 
 namespace TeamNut.Views.UserView
 {
+    /// <summary>Page for entering physical health data during registration.</summary>
     public sealed partial class UserDataPage : Page
     {
+        /// <summary>Gets the shared user view model.</summary>
         public UserViewModel ViewModel { get; }
+
+        /// <summary>Initializes a new instance of the <see cref="UserDataPage"/> class.</summary>
         public UserDataPage()
         {
             InitializeComponent();
@@ -29,6 +21,8 @@ namespace TeamNut.Views.UserView
             this.DataContext = ViewModel;
         }
 
+        /// <summary>Subscribes to save-data events when navigated to.</summary>
+        /// <param name="e">Navigation event arguments.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -36,13 +30,15 @@ namespace TeamNut.Views.UserView
             ViewModel.SaveDataSuccess += ViewModel_SaveDataSuccess;
         }
 
+        /// <summary>Unsubscribes from save-data events when navigated away.</summary>
+        /// <param name="e">Navigation event arguments.</param>
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
             ViewModel.SaveDataSuccess -= ViewModel_SaveDataSuccess;
         }
 
-        private void ViewModel_SaveDataSuccess(object sender, EventArgs e)
+        private void ViewModel_SaveDataSuccess(object? sender, EventArgs e)
         {
             if (this.Frame != null)
             {

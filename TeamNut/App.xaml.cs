@@ -1,7 +1,7 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
 using TeamNut.ModelViews;
 using TeamNut.Repositories;
 using TeamNut.Repositories.Interfaces;
@@ -14,13 +14,15 @@ using TeamNut.Views.UserView;
 
 namespace TeamNut
 {
+    /// <summary>Application entry point and lifecycle host.</summary>
     public partial class App : Application
     {
-        internal Window? _window;
+        /// <summary>The application's main window instance.</summary>
+        internal Window? AppWindow;
 
         public static IServiceProvider Services { get; private set; }
 
-
+        /// <summary>Initializes a new instance of the <see cref="App"/> class.</summary>
         public App()
         {
             this.UnhandledException += (sender, e) =>
@@ -36,14 +38,11 @@ namespace TeamNut
         {
             var services = new ServiceCollection();
 
-
             services.AddSingleton<IDbConfig, DbConfig>();
-
 
             services.AddTransient<IChatRepository, ChatRepository>();
             services.AddTransient<IChatService, ChatService>();
             services.AddTransient<NutritionistChatViewModel>();
-
 
             services.AddTransient<IDailyLogRepository, DailyLogRepository>();
             services.AddTransient<IDailyLogService, DailyLogService>();
@@ -76,19 +75,16 @@ namespace TeamNut
             services.AddSingleton<UserViewModel>();
 
             services.AddTransient<MainViewModel>();
-            
-
-
             return services.BuildServiceProvider();
         }
 
+        /// <summary>Creates and activates the main window when the application launches.</summary>
+        /// <param name="args">Launch activation event arguments.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
-
-            _window.Content = new UserView();
-
-            _window.Activate();
+            AppWindow = new MainWindow();
+            AppWindow.Content = new UserView();
+            AppWindow.Activate();
         }
     }
 }

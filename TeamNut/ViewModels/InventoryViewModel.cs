@@ -1,93 +1,117 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using TeamNut.Models;
 using TeamNut.Services;
 using TeamNut.Services.Interfaces;
-using System;
-
 namespace TeamNut.ViewModels
 {
+    /// <summary>View model for managing the user's food ingredient inventory.</summary>
     public partial class InventoryViewModel : ObservableObject
     {
-        private readonly IInventoryService _inventoryService;
-        private readonly int _currentUserId;
+        private readonly IInventoryService inventoryService;
+        private readonly int currentUserId;
+        private const double DefaultQuantityToAdd = 100;
+        private const double MinQuantityAllowed = 0;
+        private const string EmptyInventoryMessage = "Your pantry is empty. Start adding items!";
+        private const string SelectIngredientMessage = "Please choose an ingredient from suggestions.";
+        private const string InvalidQuantityMessage = "Quantity must be greater than 0.";
+        private const string LoadInventoryErrorMessage = "Error loading inventory: {0}";
+        private const string LoadIngredientsErrorMessage = "Error loading ingredients: {0}";
+        private const string DeleteItemErrorMessage = "Could not delete item: {0}";
+        private const string AddItemErrorMessage = "Could not add item: {0}";
+        private const string AddItemSuccessMessage = "Added {0}g of {1}.";
+        private const StringComparison IngredientSearchComparison = StringComparison.OrdinalIgnoreCase;
+        private bool isBusy;
+        private string emptyListMessage = EmptyInventoryMessage;
+        private string statusMessage = string.Empty;
+        private string ingredientSearchText = string.Empty;
+        private Ingredient? selectedIngredient;
+        private double quantityToAdd = DefaultQuantityToAdd;
 
-        private bool _isBusy;
-        private string _emptyListMessage = "Your pantry is empty. Start adding items!";
-        private string _statusMessage = string.Empty;
-        private string _ingredientSearchText = string.Empty;
-        private Ingredient? _selectedIngredient;
-        private double _quantityToAdd = 100;
-
+        /// <summary>Gets or sets a value indicating whether a background operation is running.</summary>
         public bool IsBusy
         {
-            get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
+            get => isBusy;
+            set => SetProperty(ref isBusy, value);
         }
 
+        /// <summary>Gets or sets the message displayed when the inventory list is empty.</summary>
         public string EmptyListMessage
         {
-            get => _emptyListMessage;
-            set => SetProperty(ref _emptyListMessage, value);
+            get => emptyListMessage;
+            set => SetProperty(ref emptyListMessage, value);
         }
 
+        /// <summary>Gets or sets the status message shown to the user.</summary>
         public string StatusMessage
         {
-            get => _statusMessage;
-            set => SetProperty(ref _statusMessage, value);
+            get => statusMessage;
+            set => SetProperty(ref statusMessage, value);
         }
 
+        /// <summary>Gets or sets the ingredient search text for autocomplete filtering.</summary>
         public string IngredientSearchText
         {
-            get => _ingredientSearchText;
+            get => ingredientSearchText;
             set
             {
-                if (SetProperty(ref _ingredientSearchText, value))
+                if (SetProperty(ref ingredientSearchText, value))
                 {
                     UpdateFilteredIngredients();
                 }
             }
         }
 
+        /// <summary>Gets or sets the ingredient chosen by the user from suggestions.</summary>
         public Ingredient? SelectedIngredient
         {
-            get => _selectedIngredient;
-            set => SetProperty(ref _selectedIngredient, value);
+            get => selectedIngredient;
+            set => SetProperty(ref selectedIngredient, value);
         }
 
+        /// <summary>Gets or sets the quantity in grams to add to inventory.</summary>
         public double QuantityToAdd
         {
-            get => _quantityToAdd;
-            set => SetProperty(ref _quantityToAdd, value);
+            get => quantityToAdd;
+            set => SetProperty(ref quantityToAdd, value);
         }
 
-        
-        public ObservableCollection<Inventory> Items { get; } = new();
-        public ObservableCollection<Ingredient> AvailableIngredients { get; } = new();
-        public ObservableCollection<Ingredient> FilteredIngredients { get; } = new();
+        /// <summary>Gets the current inventory items.</summary>
+        public ObservableCollection<Inventory> Items { get; } = new ObservableCollection<Inventory>();
 
-        public InventoryViewModel(IInventoryService inventoryService)
+        /// <summary>Gets all available ingredients.</summary>
+        public ObservableCollection<Ingredient> AvailableIngredients { get; } = new ObservableCollection<Ingredient>();
+
+        /// <summary>Gets the filtered ingredients matching the search text.</summary>
+        public ObservableCollection<Ingredient> FilteredIngredients { get; } = new ObservableCollection<Ingredient>();
+
+        public InventoryViewModel(IInventoryService iinventoryService)
         {
-            _inventoryService = inventoryService;
-            _currentUserId = Models.UserSession.UserId ?? 0;
+            inventoryService = iinventoryService;
+            currentUserId = Models.UserSession.UserId ?? 0;
 
             _ = LoadInventoryAsync();
             _ = LoadIngredientsAsync();
         }
 
-       
+        /// <summary>Loads inventory items for the current user.</summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [RelayCommand]
         public async Task LoadInventoryAsync()
         {
-            if (IsBusy) return;
+            if (IsBusy)
+            {
+                return;
+            }
 
             try
             {
                 IsBusy = true;
-                var inventoryItems = await _inventoryService.GetUserInventory(_currentUserId);
+                var inventoryItems = await inventoryService.GetUserInventory(currentUserId);
 
                 Items.Clear();
                 foreach (var item in inventoryItems)
@@ -99,7 +123,7 @@ namespace TeamNut.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error loading inventory: {ex.Message}";
+                StatusMessage = string.Format(LoadInventoryErrorMessage, ex.Message);
             }
             finally
             {
@@ -107,63 +131,76 @@ namespace TeamNut.ViewModels
             }
         }
 
-        
         [RelayCommand]
         private async Task RemoveItemAsync(Inventory item)
         {
-            if (item == null) return;
+            if (item == null)
+            {
+                return;
+            }
 
             try
             {
-                await _inventoryService.RemoveItem(item.Id);
+                await inventoryService.RemoveItem(item.Id);
                 Items.Remove(item);
                 OnPropertyChanged(nameof(IsListEmpty));
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Could not delete item: {ex.Message}";
+                StatusMessage = string.Format(DeleteItemErrorMessage, ex.Message);
             }
         }
 
-        
         [RelayCommand]
         private async Task AddNewIngredientAsync()
         {
             if (SelectedIngredient == null)
             {
-                StatusMessage = "Please choose an ingredient from suggestions.";
+                StatusMessage = SelectIngredientMessage;
                 return;
             }
 
-            if (QuantityToAdd <= 0)
+            if (QuantityToAdd <= MinQuantityAllowed)
             {
-                StatusMessage = "Quantity must be greater than 0.";
+                StatusMessage = InvalidQuantityMessage;
                 return;
             }
 
             try
             {
                 int qty = (int)Math.Round(QuantityToAdd);
-                await _inventoryService.AddToPantry(_currentUserId, SelectedIngredient.FoodId, qty);
+                await inventoryService.AddToPantry(
+                    currentUserId,
+                    SelectedIngredient.FoodId,
+                    qty);
+
                 await LoadInventoryAsync();
-                StatusMessage = $"Added {qty}g of {SelectedIngredient.Name}.";
+
+                StatusMessage = string.Format(
+                    AddItemSuccessMessage,
+                    qty,
+                    SelectedIngredient.Name);
+
                 IngredientSearchText = string.Empty;
                 SelectedIngredient = null;
                 UpdateFilteredIngredients();
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Could not add item: {ex.Message}";
+                StatusMessage = string.Format(AddItemErrorMessage, ex.Message);
             }
         }
 
+        /// <summary>Loads all available ingredients from the database.</summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         [RelayCommand]
         public async Task LoadIngredientsAsync()
         {
             try
             {
-                var ingredients = await _inventoryService.GetAllIngredients();
+                var ingredients = await inventoryService.GetAllIngredients();
                 AvailableIngredients.Clear();
+
                 foreach (var ingredient in ingredients)
                 {
                     AvailableIngredients.Add(ingredient);
@@ -173,7 +210,7 @@ namespace TeamNut.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error loading ingredients: {ex.Message}";
+                StatusMessage = string.Format(LoadIngredientsErrorMessage, ex.Message);
             }
         }
 
@@ -182,9 +219,11 @@ namespace TeamNut.ViewModels
             FilteredIngredients.Clear();
 
             var query = IngredientSearchText?.Trim() ?? string.Empty;
+
             var filtered = string.IsNullOrWhiteSpace(query)
                 ? AvailableIngredients
-                : new ObservableCollection<Ingredient>(AvailableIngredients.Where(i => i.Name.Contains(query, StringComparison.OrdinalIgnoreCase)));
+                : AvailableIngredients.Where(i =>
+                    i.Name.Contains(query, IngredientSearchComparison));
 
             foreach (var ingredient in filtered)
             {
@@ -192,7 +231,7 @@ namespace TeamNut.ViewModels
             }
         }
 
-        
+        /// <summary>Gets a value indicating whether the inventory list is empty.</summary>
         public bool IsListEmpty => !Items.Any();
     }
 }

@@ -1,6 +1,6 @@
-using Microsoft.Data.Sqlite;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using TeamNut.Models;
 using TeamNut.Repositories.Interfaces;
 
@@ -8,16 +8,19 @@ namespace TeamNut.Repositories
 {
     public class DailyLogRepository : IDailyLogRepository
     {
-        private readonly string _connectionString;
+        private readonly string connectionString;
 
         public DailyLogRepository(IDbConfig dbConfig)
         {
-            _connectionString = dbConfig.ConnectionString;
+            connectionString = dbConfig.ConnectionString;
         }
 
+        /// <summary>Inserts a new daily log entry.</summary>
+        /// <param name="log">The log entry to insert.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task Add(DailyLog log)
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             await conn.OpenAsync();
 
             const string query = @"INSERT INTO DailyLogs (user_id, mealId, calories, created_at)
@@ -32,9 +35,12 @@ namespace TeamNut.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>Returns whether the user has any log entries.</summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <returns><c>true</c> if at least one log exists.</returns>
         public async Task<bool> HasAnyLogs(int userId)
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             await conn.OpenAsync();
 
             const string query = "SELECT COUNT(1) FROM DailyLogs WHERE user_id = @userId";
@@ -45,9 +51,14 @@ namespace TeamNut.Repositories
             return count > 0;
         }
 
+        /// <summary>Gets aggregated nutrition totals for a user over a date range.</summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <param name="startInclusive">The start date (inclusive).</param>
+        /// <param name="endExclusive">The end date (exclusive).</param>
+        /// <returns>A <see cref="DailyLog"/> with summed nutrition values.</returns>
         public async Task<DailyLog> GetNutritionTotalsForRange(int userId, DateTime startInclusive, DateTime endExclusive)
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             await conn.OpenAsync();
 
             const string query = @"
@@ -79,14 +90,14 @@ namespace TeamNut.Repositories
                     Calories = Convert.ToDouble(reader["total_calories"]),
                     Protein = Convert.ToDouble(reader["total_protein"]),
                     Carbs = Convert.ToDouble(reader["total_carbs"]),
-                    Fats = Convert.ToDouble(reader["total_fats"])
+                    Fats = Convert.ToDouble(reader["total_fats"]),
                 };
             }
 
             return new DailyLog
             {
                 UserId = userId,
-                LoggedAt = startInclusive
+                LoggedAt = startInclusive,
             };
         }
     }

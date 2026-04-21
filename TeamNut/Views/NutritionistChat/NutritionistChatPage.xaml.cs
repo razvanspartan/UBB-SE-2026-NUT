@@ -1,16 +1,19 @@
-using Microsoft.UI.Xaml.Controls;
-using TeamNut.ViewModels;
-using TeamNut.Models;
-using Microsoft.UI.Xaml;
 using System;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using TeamNut.Models;
+using TeamNut.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TeamNut.Views.NutritionistChat
 {
+    /// <summary>Page for the nutritionist chat feature.</summary>
     public sealed partial class NutritionistChatPage : Page
     {
+        /// <summary>Gets the view model.</summary>
         public NutritionistChatViewModel ViewModel { get; }
 
+        /// <summary>Initializes a new instance of the <see cref="NutritionistChatPage"/> class.</summary>
         public NutritionistChatPage()
         {
             this.InitializeComponent();
@@ -30,19 +33,21 @@ namespace TeamNut.Views.NutritionistChat
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             await ViewModel.SendMessageAsync();
-            // after sending, attempt to scroll to bottom
             try
             {
                 MessagesItems.UpdateLayout();
                 if (MessagesItems.Items?.Count > 0)
                 {
-                    // get last container and bring into view by scrolling
                     MessagesScrollViewer.ChangeView(null, MessagesScrollViewer.ScrollableHeight, null, true);
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
+        /// <summary>Stops auto-refresh when navigating away.</summary>
+        /// <param name="e">Navigation event arguments.</param>
         protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);

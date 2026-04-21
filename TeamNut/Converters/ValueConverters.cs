@@ -1,212 +1,347 @@
+using System;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
-using System;
 using Windows.UI;
+using Windows.UI.Text;
 
 namespace TeamNut
 {
+    internal static class ConverterConstants
+    {
+        public const string ParamInverse = "Inverse";
+        public const string RoleNutritionist = "Nutritionist";
+        public const string RoleUser = "User";
+        public static readonly FontWeight FontBold = FontWeights.Bold;
+        public static readonly FontWeight FontNormal = FontWeights.Normal;
+        public const int VisibleThreshold = 0;
+        public static readonly Color Transparent = Color.FromArgb(0, 0, 0, 0);
+        public static readonly Color NutritionistBackground = Color.FromArgb(255, 180, 210, 240);
+        public static readonly Color UserBackground = Color.FromArgb(255, 200, 235, 195);
+        public static readonly Color UnansweredHighlight = Color.FromArgb(255, 255, 250, 200);
+    }
+
+    /// <summary>Converts a boolean or role string to a <see cref="Visibility"/> value.</summary>
     public class BoolToVisibilityConverter : IValueConverter
     {
+        /// <summary>Converts a value to <see cref="Visibility"/>.</summary>
+        /// <param name="value">The input value (bool or role string).</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Optional converter parameter.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>The appropriate <see cref="Visibility"/>.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            // if parameter is provided, treat value as string role comparison
             if (parameter != null && value != null)
             {
                 var param = parameter.ToString();
                 var strVal = value.ToString();
-                if (param == "Nutritionist")
-                    return string.Equals(strVal, "Nutritionist", StringComparison.OrdinalIgnoreCase) ? Visibility.Visible : Visibility.Collapsed;
-                if (param == "User")
-                    return !string.Equals(strVal, "Nutritionist", StringComparison.OrdinalIgnoreCase) ? Visibility.Visible : Visibility.Collapsed;
+
+                if (param == ConverterConstants.RoleNutritionist)
+                {
+                    return string.Equals(
+                        strVal,
+                        ConverterConstants.RoleNutritionist,
+                        StringComparison.OrdinalIgnoreCase)
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+                }
+
+                if (param == ConverterConstants.RoleUser)
+                {
+                    return !string.Equals(
+                        strVal,
+                        ConverterConstants.RoleNutritionist,
+                        StringComparison.OrdinalIgnoreCase)
+                        ? Visibility.Visible
+                        : Visibility.Collapsed;
+                }
             }
 
             if (value is bool boolValue)
             {
-                if (parameter?.ToString() == "Inverse")
-                {
-                    return boolValue ? Visibility.Collapsed : Visibility.Visible;
-                }
-                return boolValue ? Visibility.Visible : Visibility.Collapsed;
+                bool inverse =
+                    parameter?.ToString() == ConverterConstants.ParamInverse;
+
+                bool show = inverse ? !boolValue : boolValue;
+                return show ? Visibility.Visible : Visibility.Collapsed;
             }
 
             return Visibility.Collapsed;
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
+    /// <summary>Converts a boolean to a <see cref="FontWeight"/>.</summary>
     public class BoolToFontWeightConverter : IValueConverter
     {
+        /// <summary>Converts a boolean to a font weight.</summary>
+        /// <param name="value">The boolean value.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Optional converter parameter.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>Bold when <c>true</c>; otherwise Normal.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is bool b && b)
-            {
-                return Microsoft.UI.Text.FontWeights.Bold;
-            }
-            return Microsoft.UI.Text.FontWeights.Normal;
+            return value is bool b && b
+                ? ConverterConstants.FontBold
+                : ConverterConstants.FontNormal;
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
+    /// <summary>Inverts a boolean value.</summary>
     public class InverseBoolConverter : IValueConverter
     {
+        /// <summary>Returns the logical negation of the input boolean.</summary>
+        /// <param name="value">The boolean value.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Optional converter parameter.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>The inverted boolean.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
-            return true;
-        }
+            => value is bool b ? !b : true;
 
+        /// <summary>Returns the logical negation of the input boolean.</summary>
+        /// <param name="value">The boolean value.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Optional converter parameter.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>The inverted boolean.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
-            return true;
-        }
+            => value is bool b ? !b : true;
     }
 
+    /// <summary>Converts an empty string to a <see cref="Visibility"/> value.</summary>
     public class EmptyStringToVisibilityConverter : IValueConverter
     {
+        /// <summary>Returns Visible when the string is empty (or Inverse).</summary>
+        /// <param name="value">The string to check.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Pass "Inverse" to reverse the logic.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>The appropriate <see cref="Visibility"/>.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             bool isEmpty = string.IsNullOrWhiteSpace(value?.ToString());
+            bool inverse =
+                parameter?.ToString() == ConverterConstants.ParamInverse;
 
-            if (parameter?.ToString() == "Inverse")
-            {
-                return isEmpty ? Visibility.Collapsed : Visibility.Visible;
-            }
-            return isEmpty ? Visibility.Visible : Visibility.Collapsed;
+            return (inverse ? !isEmpty : isEmpty)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
+    /// <summary>Converts a role string to a <see cref="HorizontalAlignment"/>.</summary>
     public class RoleToHorizontalAlignmentConverter : IValueConverter
     {
+        /// <summary>Returns Left for nutritionist, Right for user.</summary>
+        /// <param name="value">The role string.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Optional converter parameter.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>The appropriate <see cref="HorizontalAlignment"/>.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             var role = value?.ToString() ?? string.Empty;
-            return string.Equals(role, "Nutritionist", StringComparison.OrdinalIgnoreCase) ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+
+            return string.Equals(
+                role,
+                ConverterConstants.RoleNutritionist,
+                StringComparison.OrdinalIgnoreCase)
+                ? HorizontalAlignment.Left
+                : HorizontalAlignment.Right;
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
+    /// <summary>Converts an integer equal to zero to a <see cref="Visibility"/> value.</summary>
     public class IntZeroToVisibilityConverter : IValueConverter
     {
+        /// <summary>Returns Visible when the integer is zero.</summary>
+        /// <param name="value">The integer value.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Pass "Inverse" to reverse the logic.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>The appropriate <see cref="Visibility"/>.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value == null) return Visibility.Visible;
+            bool inverse =
+                parameter?.ToString() == ConverterConstants.ParamInverse;
+
+            if (value == null)
+            {
+                return Visibility.Visible;
+            }
+
             if (int.TryParse(value.ToString(), out int intVal))
             {
-                bool isZero = intVal == 0;
-                if (parameter?.ToString() == "Inverse") return isZero ? Visibility.Collapsed : Visibility.Visible;
-                return isZero ? Visibility.Visible : Visibility.Collapsed;
+                bool isZero = intVal == ConverterConstants.VisibleThreshold;
+                return (inverse ? !isZero : isZero)
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
             }
+
             return Visibility.Visible;
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
+    /// <summary>Converts a role string to a background brush colour.</summary>
     public class RoleToBackgroundConverter : IValueConverter
     {
+        /// <summary>Returns a coloured brush based on the role string.</summary>
+        /// <param name="value">The role string.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Optional converter parameter.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>A <see cref="SolidColorBrush"/> for the role.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             var role = value?.ToString() ?? string.Empty;
-            if (string.Equals(role, "Nutritionist", StringComparison.OrdinalIgnoreCase))
-            {
-                return new SolidColorBrush(Color.FromArgb(255, 180, 210, 240));
-            }
-            return new SolidColorBrush(Color.FromArgb(255, 200, 235, 195));
+
+            var color = string.Equals(
+                role,
+                ConverterConstants.RoleNutritionist,
+                StringComparison.OrdinalIgnoreCase)
+                ? ConverterConstants.NutritionistBackground
+                : ConverterConstants.UserBackground;
+
+            return new SolidColorBrush(color);
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
-    // Highlights conversations that have unanswered messages, but only for nutritionist users
+    /// <summary>Highlights conversations that have unanswered messages (nutritionist view only).</summary>
     public class UnansweredToHighlightConverter : IValueConverter
     {
+        /// <summary>Returns a highlight brush for unanswered conversations when viewed by a nutritionist.</summary>
+        /// <param name="value">The HasUnanswered boolean.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Optional converter parameter.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>A <see cref="SolidColorBrush"/>.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             try
             {
-                bool hasUnanswered = false;
-                if (value is bool b) hasUnanswered = b;
+                bool hasUnanswered = value is bool b && b;
 
-                // Only highlight for nutritionists
                 var role = TeamNut.Models.UserSession.Role ?? string.Empty;
-                if (!string.Equals(role, "Nutritionist", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(
+                        role,
+                        ConverterConstants.RoleNutritionist,
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    return new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)); // transparent
+                    return new SolidColorBrush(
+                        ConverterConstants.Transparent);
                 }
 
-                if (hasUnanswered)
-                {
-                    // light yellow highlight
-                    return new SolidColorBrush(Color.FromArgb(255, 255, 250, 200));
-                }
-
-                return new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                return new SolidColorBrush(
+                    hasUnanswered
+                        ? ConverterConstants.UnansweredHighlight
+                        : ConverterConstants.Transparent);
             }
             catch
             {
-                return new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                return new SolidColorBrush(ConverterConstants.Transparent);
             }
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
+    /// <summary>Converts an integer greater than zero to a <see cref="Visibility"/> value.</summary>
     public class IntGreaterThanZeroToVisibilityConverter : IValueConverter
     {
+        /// <summary>Returns Visible when the integer is greater than zero.</summary>
+        /// <param name="value">The integer value.</param>
+        /// <param name="targetType">The target binding type.</param>
+        /// <param name="parameter">Pass "Inverse" to reverse the logic.</param>
+        /// <param name="language">The language of the conversion.</param>
+        /// <returns>The appropriate <see cref="Visibility"/>.</returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is int intValue)
+            bool inverse =
+                parameter?.ToString() == ConverterConstants.ParamInverse;
+
+            bool visible = value switch
             {
-                var visible = intValue > 0;
-                if (parameter?.ToString() == "Inverse") return visible ? Visibility.Collapsed : Visibility.Visible;
-                return visible ? Visibility.Visible : Visibility.Collapsed;
-            }
-            if (value is long longValue)
-            {
-                var visible = longValue > 0;
-                if (parameter?.ToString() == "Inverse") return visible ? Visibility.Collapsed : Visibility.Visible;
-                return visible ? Visibility.Visible : Visibility.Collapsed;
-            }
-            return Visibility.Collapsed;
+                int i => i > ConverterConstants.VisibleThreshold,
+                long l => l > ConverterConstants.VisibleThreshold,
+                _ => false
+            };
+
+            return (inverse ? !visible : visible)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
+        /// <summary>Not implemented.</summary>
+        /// <param name="value">Unused.</param>
+        /// <param name="targetType">Unused.</param>
+        /// <param name="parameter">Unused.</param>
+        /// <param name="language">Unused.</param>
+        /// <returns>Always throws.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 }
