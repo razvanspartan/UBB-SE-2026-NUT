@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.UI.Xaml;
 using TeamNut.Models;
 
 namespace TeamNut.Views.MealPlanView
@@ -33,6 +34,10 @@ namespace TeamNut.Views.MealPlanView
 
         public bool IsNutFree { get; set; }
 
+        public bool IsFavorite { get; set; }
+
+        public Visibility FavoriteVisibility => IsFavorite ? Visibility.Visible : Visibility.Collapsed;
+
         public List<IngredientViewModel> Ingredients { get; set; } = new List<IngredientViewModel>();
 
         public static MealViewModel FromMeal(Meal meal, string mealType)
@@ -53,6 +58,7 @@ namespace TeamNut.Views.MealPlanView
                 IsGlutenFree = meal.IsGlutenFree,
                 IsLactoseFree = meal.IsLactoseFree,
                 IsNutFree = meal.IsNutFree,
+                IsFavorite = meal.IsFavorite,
             };
         }
     }
