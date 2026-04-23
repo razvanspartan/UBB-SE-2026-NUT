@@ -53,7 +53,7 @@ namespace TeamNut.Tests.Services
             await service.SearchMealsAsync(null);
 
             await mockMealService.Received(1).GetFilteredMealsAsync(
-                Arg.Is<MealFilter>(f => f.SearchTerm == ""));
+                Arg.Is<MealFilter>(f => f.SearchTerm == string.Empty));
         }
 
         [Fact]

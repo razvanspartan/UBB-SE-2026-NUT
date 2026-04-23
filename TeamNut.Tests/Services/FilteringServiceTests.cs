@@ -33,7 +33,7 @@ namespace TeamNut.Tests.Services
                 new Meal { Name = "Fish Tacos" }
             };
 
-            var result = service.FilterMeals(meals, "");
+            var result = service.FilterMeals(meals, string.Empty);
 
             result.Should().HaveCount(3);
         }
@@ -158,7 +158,7 @@ namespace TeamNut.Tests.Services
                 new Ingredient { Name = "Fish" }
             };
 
-            var result = service.FilterIngredients(ingredients, "");
+            var result = service.FilterIngredients(ingredients, string.Empty);
 
             result.Should().HaveCount(3);
         }

@@ -158,9 +158,9 @@ namespace TeamNut.Tests.Services
         [Fact]
         public async Task AddMessageAsync_WithEmptyText_CallsRepository()
         {
-            await service.AddMessageAsync(1, 2, "", false);
+            await service.AddMessageAsync(1, 2, string.Empty, false);
 
-            await mockRepo.Received(1).AddMessageAsync(1, 2, "", false);
+            await mockRepo.Received(1).AddMessageAsync(1, 2, string.Empty, false);
         }
 
         [Fact]

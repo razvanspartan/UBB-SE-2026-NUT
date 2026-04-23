@@ -101,7 +101,6 @@ namespace TeamNut.Tests.Services
             result.Should().Be(expected);
         }
 
-
         [Fact]
         public void CalculateCalorieNeeds_WithZeroWeight_ReturnsZero()
         {
