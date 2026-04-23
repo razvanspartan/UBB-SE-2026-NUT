@@ -34,7 +34,14 @@ namespace TeamNut.ViewModels
         public RemindersViewModel(IReminderService rreminderService)
         {
             reminderService = rreminderService;
-            dispatcher = DispatcherQueue.GetForCurrentThread();
+            try
+            {
+                dispatcher = DispatcherQueue.GetForCurrentThread();
+            }
+            catch
+            {
+                dispatcher = null;
+            }
             reminderService.RemindersChanged += OnRemindersChanged;
         }
 
