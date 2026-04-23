@@ -1,13 +1,14 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TeamNut.Models;
-using TeamNut.Repositories.Interfaces;
-
 namespace TeamNut.Services
 {
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+
     public class ChatService : IChatService
     {
         private readonly IChatRepository repo;
+
         public ChatService(IChatRepository rrepo)
         {
             repo = rrepo;

@@ -8,16 +8,27 @@ namespace TeamNut.Views.ShoppingListView
     using TeamNut.ViewModels;
     using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// ShoppingListPage.
+    /// </summary>
     public sealed partial class ShoppingListPage : Page
     {
         private const string RootPageName = "RootPage";
+
         private const int MinSearchLength = 3;
+
         private const string NoMatchingIngredientsText = "no matching ingredients found";
+
         private const string ButtonYes = "Yes";
+
         private const string ButtonCancel = "Cancel";
+
         private const string TitleConfirmPantryTransfer = "Confirm Pantry Transfer";
+
         private const string TitleConfirmDeletion = "Confirm Deletion";
+
         private const string MsgConfirmPantryTransfer = "Are you sure you want to remove this item and add it to your pantry?";
+
         private const string MsgConfirmDeletion = "Are you sure you want to remove this item from the shopping list?";
 
         public ShoppingListViewModel ViewModel { get; }
@@ -25,7 +36,7 @@ namespace TeamNut.Views.ShoppingListView
         public ShoppingListPage()
         {
             this.InitializeComponent();
-            ViewModel = App.Services.GetService<ShoppingListViewModel>();
+            ViewModel = App.Services.GetRequiredService<ShoppingListViewModel>();
             this.Name = RootPageName;
         }
 

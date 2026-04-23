@@ -1,8 +1,8 @@
-using System;
-using TeamNut.Models;
-
 namespace TeamNut.Services.Interfaces
 {
+    using System;
+    using TeamNut.Models;
+
     public interface INutritionCalculationService
     {
         int CalculateAge(DateTimeOffset? birthDate);

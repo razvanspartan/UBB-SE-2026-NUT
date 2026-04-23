@@ -1,12 +1,15 @@
-using System;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using TeamNut.Models;
-using TeamNut.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace TeamNut.Views.NutritionistChat
 {
+    using System;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using TeamNut.Models;
+    using TeamNut.ViewModels;
+    using Microsoft.Extensions.DependencyInjection;
+
+    /// <summary>
+    /// NutritionistChatPage.
+    /// </summary>
     public sealed partial class NutritionistChatPage : Page
     {
         public NutritionistChatViewModel ViewModel { get; }
@@ -14,7 +17,7 @@ namespace TeamNut.Views.NutritionistChat
         public NutritionistChatPage()
         {
             this.InitializeComponent();
-            ViewModel = App.Services.GetService<NutritionistChatViewModel>();
+            ViewModel = App.Services.GetRequiredService<NutritionistChatViewModel>();
             this.DataContext = ViewModel;
         }
 

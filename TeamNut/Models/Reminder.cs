@@ -1,9 +1,9 @@
-using System;
-using System.ComponentModel.DataAnnotations;
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace TeamNut.Models
 {
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using CommunityToolkit.Mvvm.ComponentModel;
+
     /// <summary>Represents a scheduled health reminder for a user.</summary>
     public partial class Reminder : ObservableValidator
     {

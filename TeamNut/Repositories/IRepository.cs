@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace TeamNut.Repositories
 {
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
     public interface IRepository<T>
         where T : class
     {

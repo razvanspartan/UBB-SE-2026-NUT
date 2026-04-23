@@ -1,4 +1,4 @@
-﻿namespace TeamNut.Tests.ViewModels
+namespace TeamNut.Tests.ViewModels
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -9,8 +9,13 @@
     using Xunit;
 
     [Collection("UsesStaticUserSession")]
-    public class RemindersViewModelTests
+    public class RemindersViewModelTests : System.IDisposable
     {
+        public void Dispose()
+        {
+            UserSession.Logout();
+        }
+
         [Fact]
         public async Task SaveReminderAsync_WhenReminderIsNull_ReturnsInvalidMessage()
         {
@@ -33,13 +38,12 @@
             UserSession.Login(1, "TestUser", "User");
             reminderService.SaveReminder(reminder).Returns("Success");
             reminderService.GetUserReminders(1).Returns(loadedReminders);
+            reminderService.GetNextReminder(1).Returns(Task.FromResult<Reminder?>(null));
 
             var result = await vm.SaveReminderAsync(reminder);
 
             Assert.Equal("Success", result);
             Assert.Single(vm.Reminders);
-
-            UserSession.Logout();
         }
 
         [Fact]
@@ -69,8 +73,6 @@
 
             Assert.Empty(vm.Reminders);
             Assert.True(vm.IsBusy);
-
-            UserSession.Logout();
         }
 
         [Fact]
@@ -90,8 +92,6 @@
             Assert.Equal(2, vm.Reminders.Count);
             Assert.Equal(nextReminder, vm.NextReminder);
             Assert.False(vm.IsBusy);
-
-            UserSession.Logout();
         }
 
         [Fact]
@@ -106,8 +106,6 @@
 
             Assert.NotNull(vm.SelectedReminder);
             Assert.Equal(99, vm.SelectedReminder.UserId);
-
-            UserSession.Logout();
         }
 
         [Fact]
@@ -123,8 +121,6 @@
             await vm.DeleteReminderCommand.ExecuteAsync(reminder);
 
             Assert.Empty(vm.Reminders);
-
-            UserSession.Logout();
         }
     }
 }

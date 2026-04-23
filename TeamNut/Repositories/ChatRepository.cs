@@ -1,12 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Data.Sqlite;
-using TeamNut.Models;
-using TeamNut.Repositories.Interfaces;
-
 namespace TeamNut.Repositories
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.Data.Sqlite;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+
     internal class ChatRepository : IChatRepository
     {
         private readonly string connectionString;

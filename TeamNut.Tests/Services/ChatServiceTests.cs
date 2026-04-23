@@ -13,6 +13,7 @@ namespace TeamNut.Tests.Services
     public class ChatServiceTests
     {
         private readonly IChatRepository mockRepo;
+
         private readonly ChatService service;
 
         public ChatServiceTests()

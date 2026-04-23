@@ -13,6 +13,7 @@ namespace TeamNut.IntegrationTests
     public class UserDataNutritionPersistenceIntegrationTests : IDisposable
     {
         private readonly string dbPath;
+
         private readonly string connectionString;
 
         public UserDataNutritionPersistenceIntegrationTests()
@@ -79,7 +80,18 @@ namespace TeamNut.IntegrationTests
 
             if (File.Exists(dbPath))
             {
-                File.Delete(dbPath);
+                try
+                {
+                    File.Delete(dbPath);
+                }
+                catch (IOException)
+                {
+                    
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    
+                }
             }
         }
 

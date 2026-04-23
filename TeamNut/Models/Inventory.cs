@@ -1,7 +1,7 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace TeamNut.Models
 {
+    using CommunityToolkit.Mvvm.ComponentModel;
+
     /// <summary>Represents a user's inventory entry for a food ingredient.</summary>
     public partial class Inventory : ObservableObject
     {

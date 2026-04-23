@@ -1,11 +1,11 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.Data.Sqlite;
-using TeamNut.Models;
-using TeamNut.Repositories.Interfaces;
-
 namespace TeamNut.Repositories
 {
+    using System;
+    using System.Threading.Tasks;
+    using Microsoft.Data.Sqlite;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+
     public class DailyLogRepository : IDailyLogRepository
     {
         private readonly string connectionString;

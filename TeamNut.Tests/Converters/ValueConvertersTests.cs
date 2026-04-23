@@ -21,7 +21,7 @@ namespace TeamNut.Tests.Converters
         {
             var converter = new BooleanToVisibilityConverter();
 
-            var result = converter.Convert(true, typeof(Visibility), null, string.Empty);
+            var result = converter.Convert(true, typeof(Visibility), null!, string.Empty);
 
             result.Should().Be(Visibility.Visible);
         }
@@ -31,7 +31,7 @@ namespace TeamNut.Tests.Converters
         {
             var converter = new BooleanToVisibilityConverter();
 
-            var result = converter.ConvertBack(Visibility.Visible, typeof(bool), null, string.Empty);
+            var result = converter.ConvertBack(Visibility.Visible, typeof(bool), null!, string.Empty);
 
             result.Should().Be(true);
         }
@@ -61,7 +61,7 @@ namespace TeamNut.Tests.Converters
         {
             var converter = new InverseBoolConverter();
 
-            var result = converter.Convert(false, typeof(bool), null, string.Empty);
+            var result = converter.Convert(false, typeof(bool), null!, string.Empty);
 
             result.Should().Be(true);
         }
@@ -71,7 +71,7 @@ namespace TeamNut.Tests.Converters
         {
             var converter = new EmptyStringToVisibilityConverter();
 
-            var result = converter.Convert("   ", typeof(Visibility), null, string.Empty);
+            var result = converter.Convert("   ", typeof(Visibility), null!, string.Empty);
 
             result.Should().Be(Visibility.Visible);
         }
@@ -81,7 +81,7 @@ namespace TeamNut.Tests.Converters
         {
             var converter = new RoleToHorizontalAlignmentConverter();
 
-            var result = converter.Convert("Nutritionist", typeof(HorizontalAlignment), null, string.Empty);
+            var result = converter.Convert("Nutritionist", typeof(HorizontalAlignment), null!, string.Empty);
 
             result.Should().Be(HorizontalAlignment.Left);
         }
@@ -91,7 +91,7 @@ namespace TeamNut.Tests.Converters
         {
             var converter = new IntZeroToVisibilityConverter();
 
-            var result = converter.Convert(0, typeof(Visibility), null, string.Empty);
+            var result = converter.Convert(0, typeof(Visibility), null!, string.Empty);
 
             result.Should().Be(Visibility.Visible);
         }
@@ -101,7 +101,7 @@ namespace TeamNut.Tests.Converters
         {
             var converter = new IntGreaterThanZeroToVisibilityConverter();
 
-            var result = converter.Convert(5, typeof(Visibility), null, string.Empty);
+            var result = converter.Convert(5, typeof(Visibility), null!, string.Empty);
 
             result.Should().Be(Visibility.Visible);
         }

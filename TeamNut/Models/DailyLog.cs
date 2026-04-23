@@ -1,7 +1,7 @@
-using System;
-
 namespace TeamNut.Models
 {
+    using System;
+
     /// <summary>Represents a daily nutrition log entry.</summary>
     public class DailyLog
     {

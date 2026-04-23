@@ -11,6 +11,7 @@ namespace TeamNut.Tests.Services
     public class ReminderServiceTests
     {
         private readonly IReminderRepository mockRepo;
+
         private readonly ReminderService service;
 
         public ReminderServiceTests()
@@ -40,12 +41,12 @@ namespace TeamNut.Tests.Services
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public async Task SaveReminder_WithEmptyName_ReturnsError(string name)
+        public async Task SaveReminder_WithEmptyName_ReturnsError(string? name)
         {
             var reminder = new Reminder
             {
                 UserId = 1,
-                Name = name,
+                Name = name ?? string.Empty,
                 ReminderDate = "2024-01-01"
             };
 

@@ -1,25 +1,25 @@
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using TeamNut.ModelViews;
-using TeamNut.Repositories;
-using TeamNut.Repositories.Interfaces;
-using TeamNut.Services;
-using TeamNut.Services.Interfaces;
-using TeamNut.ViewModels;
-using TeamNut.Views;
-using TeamNut.Views.MealPlanView;
-using TeamNut.Views.UserView;
-
 namespace TeamNut
 {
+    using System;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using TeamNut.ModelViews;
+    using TeamNut.Repositories;
+    using TeamNut.Repositories.Interfaces;
+    using TeamNut.Services;
+    using TeamNut.Services.Interfaces;
+    using TeamNut.ViewModels;
+    using TeamNut.Views;
+    using TeamNut.Views.MealPlanView;
+    using TeamNut.Views.UserView;
+
     /// <summary>Application entry point and lifecycle host.</summary>
     public partial class App : Application
     {
         internal Window? AppWindow;
 
-        public static IServiceProvider Services { get; private set; }
+        public static IServiceProvider Services { get; private set; } = null!;
 
         public App()
         {

@@ -1,7 +1,7 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace TeamNut.Models
 {
+    using CommunityToolkit.Mvvm.ComponentModel;
+
     /// <summary>Represents the active filters used when searching meals.</summary>
     public partial class MealFilter : ObservableObject
     {

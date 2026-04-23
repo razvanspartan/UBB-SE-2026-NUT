@@ -17,10 +17,10 @@
             var fakeRepo = Substitute.For<IMealRepository>();
             var service = new MealService(fakeRepo);
 
-            await service.GetMealsAsync(null);
+            await service.GetMealsAsync(null!);
 
             await fakeRepo.Received(1).GetAll();
-            await fakeRepo.DidNotReceiveWithAnyArgs().GetFilteredMeals(default);
+            await fakeRepo.DidNotReceiveWithAnyArgs().GetFilteredMeals(Arg.Any<MealFilter>());
         }
 
         [Fact]
@@ -42,7 +42,7 @@
             var fakeRepo = Substitute.For<IMealRepository>();
             var service = new MealService(fakeRepo);
 
-            await service.ToggleFavoriteAsync(null);
+            await service.ToggleFavoriteAsync(null!);
 
             await fakeRepo.DidNotReceiveWithAnyArgs().SetFavoriteAsync(default, default, default);
         }

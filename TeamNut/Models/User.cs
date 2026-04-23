@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace TeamNut.Models
 {
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.Linq;
+    using CommunityToolkit.Mvvm.ComponentModel;
+
     /// <summary>Represents an application user account.</summary>
     public partial class User : ObservableValidator
     {

@@ -1,37 +1,52 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using TeamNut.Models;
-using TeamNut.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace TeamNut
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using TeamNut.Models;
+    using TeamNut.ViewModels;
+    using Microsoft.Extensions.DependencyInjection;
+
+    /// <summary>
+    /// MealsPage.
+    /// </summary>
     public sealed partial class MealsPage : Page
     {
         private MealSearchViewModel ViewModel { get; }
+
         private const string FavoriteOnSymbol = "★";
+
         private const string FavoriteOffSymbol = "☆";
+
         private const string ButtonClose = "Close";
+
         private const string LabelCalories = "Calories";
+
         private const string LabelProtein = "Protein";
+
         private const string LabelCarbs = "Carbs";
+
         private const string LabelFat = "Fat";
+
         private const string UnitGrams = "g";
+
         private const int DetailsPanelSpacing = 10;
+
         private const int MealImageHeight = 150;
+
         private const string LineBreak = "\n";
+
         private const string DoubleLineBreak = "\n\n";
 
         public MealsPage()
         {
             InitializeComponent();
-            ViewModel = App.Services.GetService<MealSearchViewModel>();
-            DataContext = ViewModel;
+            this.ViewModel = App.Services.GetRequiredService<MealSearchViewModel>();
+            DataContext = this.ViewModel;
 
-            Loaded += (s, e) => BtnSearch_Click(this, new RoutedEventArgs());
+            Loaded += (s, e) => this.BtnSearch_Click(this, new RoutedEventArgs());
         }
 
         private async void BtnSearch_Click(object sender, RoutedEventArgs e)
@@ -47,8 +62,8 @@ namespace TeamNut
                 IsFavoriteOnly = chkFavorites?.IsChecked == true
             };
 
-            var results = await ViewModel.SearchMealsAsync(filter);
-            ViewModel.SetAllMeals(results);
+            var results = await this.ViewModel.SearchMealsAsync(filter);
+            this.ViewModel.SetAllMeals(results);
         }
 
         private async void Favorite_Click(object sender, RoutedEventArgs e)
@@ -61,11 +76,11 @@ namespace TeamNut
             meal.IsFavorite = !meal.IsFavorite;
             btn.Content = meal.IsFavorite ? FavoriteOnSymbol : FavoriteOffSymbol;
 
-            await ViewModel.ToggleFavoriteAsync(meal);
+            await this.ViewModel.ToggleFavoriteAsync(meal);
 
             if (chkFavorites?.IsChecked == true && !meal.IsFavorite)
             {
-                BtnSearch_Click(this, new RoutedEventArgs());
+                this.BtnSearch_Click(this, new RoutedEventArgs());
             }
         }
 
@@ -77,7 +92,7 @@ namespace TeamNut
             }
 
             var ingredientsText =
-                await ViewModel.GetMealIngredientsTextAsync(meal.Id);
+                await this.ViewModel.GetMealIngredientsTextAsync(meal.Id);
 
             var panel = new StackPanel { Spacing = DetailsPanelSpacing };
 
@@ -125,12 +140,12 @@ namespace TeamNut
 
         private void Prev_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.GoToPreviousPage();
+            this.ViewModel.GoToPreviousPage();
         }
 
         private void Next_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.GoToNextPage();
+            this.ViewModel.GoToNextPage();
         }
 
         private void TxtSearch_KeyDown(
@@ -139,7 +154,7 @@ namespace TeamNut
         {
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
-                BtnSearch_Click(this, new RoutedEventArgs());
+                this.BtnSearch_Click(this, new RoutedEventArgs());
             }
         }
     }

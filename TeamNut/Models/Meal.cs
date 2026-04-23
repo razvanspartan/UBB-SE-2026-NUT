@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.UI.Xaml;
-
 namespace TeamNut.Models
 {
+    using System.ComponentModel.DataAnnotations;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using Microsoft.UI.Xaml;
+
     /// <summary>Represents a meal and its nutrition/filter metadata.</summary>
     public partial class Meal : ObservableObject
     {

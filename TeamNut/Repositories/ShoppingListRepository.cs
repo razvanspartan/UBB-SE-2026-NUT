@@ -1,19 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Data.Sqlite;
-using TeamNut.Models;
-using TeamNut.Repositories.Interfaces;
-
 namespace TeamNut.Repositories
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.Data.Sqlite;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+
     public class ShoppingListRepository : IShoppingListRepository
     {
         private readonly string connectionString;
 
         public ShoppingListRepository(IDbConfig dbConfig)
         {
-            connectionString = dbConfig.ConnectionString;
+            this.connectionString = dbConfig.ConnectionString;
         }
 
         public async Task Add(ShoppingItem item)
@@ -54,7 +54,7 @@ namespace TeamNut.Repositories
 
             while (await reader.ReadAsync())
             {
-                items.Add(MapReaderToItem(reader));
+                items.Add(this.MapReaderToItem(reader));
             }
 
             return items;
@@ -77,7 +77,7 @@ namespace TeamNut.Repositories
 
             if (await reader.ReadAsync())
             {
-                return MapReaderToItem(reader);
+                return this.MapReaderToItem(reader);
             }
 
             return null;
@@ -101,7 +101,7 @@ namespace TeamNut.Repositories
 
             if (await reader.ReadAsync())
             {
-                return MapReaderToItem(reader);
+                return this.MapReaderToItem(reader);
             }
 
             return null;
@@ -126,7 +126,7 @@ namespace TeamNut.Repositories
 
             while (await reader.ReadAsync())
             {
-                items.Add(MapReaderToItem(reader));
+                items.Add(this.MapReaderToItem(reader));
             }
 
             return items;

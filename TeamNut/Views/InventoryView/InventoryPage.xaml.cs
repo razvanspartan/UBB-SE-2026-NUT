@@ -1,11 +1,14 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
-using TeamNut.Models;
-using TeamNut.ViewModels;
-
 namespace TeamNut.Views.InventoryView
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.UI.Xaml.Controls;
+    using Microsoft.UI.Xaml.Navigation;
+    using TeamNut.Models;
+    using TeamNut.ViewModels;
+
+    /// <summary>
+    /// InventoryPage.
+    /// </summary>
     public sealed partial class InventoryPage : Page
     {
         public InventoryViewModel ViewModel { get; }

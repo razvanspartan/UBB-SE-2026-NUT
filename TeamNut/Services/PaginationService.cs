@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using TeamNut.Services.Interfaces;
-
 namespace TeamNut.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using TeamNut.Services.Interfaces;
+
     public class PaginationService : IPaginationService
     {
         public List<T> GetPage<T>(IEnumerable<T> items, int currentPage, int pageSize)

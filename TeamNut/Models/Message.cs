@@ -1,7 +1,7 @@
-using System;
-
 namespace TeamNut.Models
 {
+    using System;
+
     /// <summary>Represents a chat message within a conversation.</summary>
     public class Message
     {

@@ -1,12 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Data.Sqlite;
-using TeamNut.Models;
-using TeamNut.Repositories.Interfaces;
-
 namespace TeamNut.Repositories
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.Data.Sqlite;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+
     public class UserRepository : IUserRepository
     {
         private readonly string connectionString;
@@ -15,6 +15,7 @@ namespace TeamNut.Repositories
         {
             connectionString = dbConfig.ConnectionString;
         }
+
         public async Task<User?> GetById(int id)
         {
             using var conn = new SqliteConnection(connectionString);

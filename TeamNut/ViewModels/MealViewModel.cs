@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using Microsoft.UI.Xaml;
-using TeamNut.Models;
-
 namespace TeamNut.Views.MealPlanView
 {
+    using System.Collections.Generic;
+    using Microsoft.UI.Xaml;
+    using TeamNut.Models;
+
     public class MealViewModel
     {
         public int Id { get; set; }

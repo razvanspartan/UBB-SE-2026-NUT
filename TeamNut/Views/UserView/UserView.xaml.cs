@@ -1,7 +1,10 @@
-using Microsoft.UI.Xaml.Controls;
-
 namespace TeamNut.Views.UserView
 {
+    using Microsoft.UI.Xaml.Controls;
+
+    /// <summary>
+    /// UserView.
+    /// </summary>
     public sealed partial class UserView : UserControl
     {
         public UserView()

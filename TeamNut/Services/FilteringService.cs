@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using TeamNut.Models;
-using TeamNut.Services.Interfaces;
-
 namespace TeamNut.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using TeamNut.Models;
+    using TeamNut.Services.Interfaces;
+
     public class FilteringService : IFilteringService
     {
         public List<Meal> FilterMeals(

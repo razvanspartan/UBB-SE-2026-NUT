@@ -1,12 +1,15 @@
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
-using TeamNut.ViewModels;
-
 namespace TeamNut.Views.UserView
 {
+    using System;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using Microsoft.UI.Xaml.Navigation;
+    using TeamNut.ViewModels;
+
+    /// <summary>
+    /// RegisterPage.
+    /// </summary>
     public sealed partial class RegisterPage : Page
     {
         public UserViewModel ViewModel { get; }
@@ -14,22 +17,22 @@ namespace TeamNut.Views.UserView
         public RegisterPage()
         {
             InitializeComponent();
-            ViewModel = App.Services.GetRequiredService<UserViewModel>();
-            this.DataContext = ViewModel;
+            this.ViewModel = App.Services.GetRequiredService<UserViewModel>();
+            this.DataContext = this.ViewModel;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            ViewModel.LoginSuccess += ViewModel_LoginSuccess;
-            ViewModel.RegistrationValid += ViewModel_RegistrationValid;
+            this.ViewModel.LoginSuccess += this.ViewModel_LoginSuccess;
+            this.ViewModel.RegistrationValid += this.ViewModel_RegistrationValid;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            ViewModel.LoginSuccess -= ViewModel_LoginSuccess;
-            ViewModel.RegistrationValid -= ViewModel_RegistrationValid;
+            this.ViewModel.LoginSuccess -= this.ViewModel_LoginSuccess;
+            this.ViewModel.RegistrationValid -= this.ViewModel_RegistrationValid;
         }
 
         private void ViewModel_LoginSuccess(object? sender, EventArgs e)
@@ -42,9 +45,9 @@ namespace TeamNut.Views.UserView
 
         private void PasswordInput_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            if (sender is PasswordBox pwBox && ViewModel.CurrentUser != null)
+            if (sender is PasswordBox pwBox && this.ViewModel.CurrentUser != null)
             {
-                ViewModel.CurrentUser.Password = pwBox.Password;
+                this.ViewModel.CurrentUser.Password = pwBox.Password;
             }
         }
 
@@ -58,7 +61,7 @@ namespace TeamNut.Views.UserView
 
         private void ViewModel_RegistrationValid(object? sender, EventArgs e)
         {
-            this.Frame?.Navigate(typeof(UserDataPage), ViewModel.CurrentUser);
+            this.Frame?.Navigate(typeof(UserDataPage), this.ViewModel.CurrentUser);
         }
     }
 }

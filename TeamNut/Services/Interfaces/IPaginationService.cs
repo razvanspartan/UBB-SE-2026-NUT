@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-
 namespace TeamNut.Services.Interfaces
 {
+    using System.Collections.Generic;
+
     public interface IPaginationService
     {
         List<T> GetPage<T>(IEnumerable<T> items, int currentPage, int pageSize);

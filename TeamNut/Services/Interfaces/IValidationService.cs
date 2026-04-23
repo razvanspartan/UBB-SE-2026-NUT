@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using TeamNut.Models;
-
 namespace TeamNut.Services.Interfaces
 {
+    using System.Collections.Generic;
+    using TeamNut.Models;
+
     public interface IValidationService
     {
         List<string> ValidateUser(User user);

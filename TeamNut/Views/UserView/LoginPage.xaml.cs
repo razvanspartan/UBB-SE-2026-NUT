@@ -1,12 +1,15 @@
-using System;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
-using TeamNut.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace TeamNut.Views.UserView
 {
+    using System;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using Microsoft.UI.Xaml.Navigation;
+    using TeamNut.ViewModels;
+    using Microsoft.Extensions.DependencyInjection;
+
+    /// <summary>
+    /// LoginPage.
+    /// </summary>
     public sealed partial class LoginPage : Page
     {
         public UserViewModel ViewModel { get; }

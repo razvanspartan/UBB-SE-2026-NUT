@@ -1,13 +1,13 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using TeamNut.Models;
-using TeamNut.Repositories;
-using TeamNut.Repositories.Interfaces;
-using TeamNut.Services.Interfaces;
-
 namespace TeamNut.Services
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using TeamNut.Models;
+    using TeamNut.Repositories;
+    using TeamNut.Repositories.Interfaces;
+    using TeamNut.Services.Interfaces;
+
     public class MealService : IMealService
     {
         private readonly IMealRepository mealRepository;

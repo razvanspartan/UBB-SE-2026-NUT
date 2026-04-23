@@ -1,7 +1,7 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace TeamNut.Models
 {
+    using CommunityToolkit.Mvvm.ComponentModel;
+
     /// <summary>Represents an item on the user's shopping list.</summary>
     public partial class ShoppingItem : ObservableObject
     {

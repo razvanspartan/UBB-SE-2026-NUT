@@ -1,7 +1,7 @@
-using System;
-
 namespace TeamNut.Models
 {
+    using System;
+
     /// <summary>Represents a generated meal plan for a user.</summary>
     public class MealPlan
     {
