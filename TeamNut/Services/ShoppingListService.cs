@@ -1,39 +1,45 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using TeamNut.Models;
-
 namespace TeamNut.Services
 {
-    public class ShoppingListService
-    {
-        private readonly TeamNut.Repositories.ShoppingListRepository _repository;
-        private readonly TeamNut.Repositories.IngredientRepository _ingredientRepository;
-        private readonly TeamNut.Repositories.InventoryRepository _inventoryRepository;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+    using TeamNut.Services.Interfaces;
 
-        public ShoppingListService()
+    public class ShoppingListService : IShoppingListService
+    {
+        private readonly IShoppingListRepository repository;
+        private readonly IIngredientRepository ingredientRepository;
+        private readonly IInventoryRepository inventoryRepository;
+
+        public ShoppingListService(
+            IShoppingListRepository repository,
+            IIngredientRepository ingredientRepository,
+            IInventoryRepository inventoryRepository)
         {
-            _repository = new TeamNut.Repositories.ShoppingListRepository();
-            _ingredientRepository = new TeamNut.Repositories.IngredientRepository();
-            _inventoryRepository = new TeamNut.Repositories.InventoryRepository();
+            this.repository = repository;
+            this.ingredientRepository = ingredientRepository;
+            this.inventoryRepository = inventoryRepository;
         }
 
         public async Task<List<ShoppingItem>> GetShoppingItemsAsync(int userId)
         {
-            return await _repository.GetAllByUserId(userId);
+            return await repository.GetAllByUserId(userId);
         }
 
-        public async Task<ShoppingItem> AddItemAsync(string itemName, int userId, double quantity = 0)
+        public async Task<ShoppingItem?> AddItemAsync(string itemName, int userId, double quantity = 0)
         {
             try
             {
-                int ingredientId = await _ingredientRepository.GetOrCreateIngredientIdAsync(itemName);
+                int ingredientId = await ingredientRepository.GetOrCreateIngredientIdAsync(itemName);
+                var existing = await repository.GetByUserAndIngredient(userId, ingredientId);
 
-                var existing = await _repository.GetByUserAndIngredient(userId, ingredientId);
                 if (existing != null)
                 {
                     existing.QuantityGrams += quantity;
-                    await _repository.Update(existing);
+                    await repository.Update(existing);
+
                     return existing;
                 }
 
@@ -43,10 +49,11 @@ namespace TeamNut.Services
                     IngredientId = ingredientId,
                     IngredientName = itemName,
                     QuantityGrams = quantity,
-                    IsChecked = false
+                    IsChecked = false,
                 };
 
-                await _repository.Add(newItem);
+                await repository.Add(newItem);
+
                 return newItem;
             }
             catch
@@ -59,7 +66,7 @@ namespace TeamNut.Services
         {
             try
             {
-                await _repository.Delete(item.Id);
+                await repository.Delete(item.Id);
                 return true;
             }
             catch
@@ -72,7 +79,7 @@ namespace TeamNut.Services
         {
             try
             {
-                await _repository.Update(item);
+                await repository.Update(item);
                 return true;
             }
             catch
@@ -83,20 +90,23 @@ namespace TeamNut.Services
 
         public async Task<List<KeyValuePair<int, string>>> SearchIngredientsAsync(string search)
         {
-            return await _ingredientRepository.SearchIngredientsAsync(search);
+            return await ingredientRepository.SearchIngredientsAsync(search);
         }
 
         public async Task<bool> MoveToPantryAsync(ShoppingItem item)
         {
             try
             {
-                await _inventoryRepository.Add(new Inventory
+                var newInventoryItem = new Inventory
                 {
                     UserId = item.UserId,
                     IngredientId = item.IngredientId,
-                    QuantityGrams = item.QuantityGrams > 0 ? (int)item.QuantityGrams : 100
-                });
-                await _repository.Delete(item.Id);
+                    QuantityGrams = item.QuantityGrams > 0 ? (int)item.QuantityGrams : 100,
+                };
+
+                await inventoryRepository.Add(newInventoryItem);
+                await repository.Delete(item.Id);
+
                 return true;
             }
             catch
@@ -109,13 +119,15 @@ namespace TeamNut.Services
         {
             try
             {
-                var neededIngredients = await _repository.GetIngredientsNeededFromMealPlan(userId);
-                if (!neededIngredients.Any()) return 0;
+                var neededIngredients = await repository.GetIngredientsNeededFromMealPlan(userId);
 
-                var inventory = (await _inventoryRepository.GetAllByUserId(userId)).ToList();
+                if (!neededIngredients.Any())
+                {
+                    return 0;
+                }
 
-                var currentList = await _repository.GetAllByUserId(userId);
-
+                var inventory = (await inventoryRepository.GetAllByUserId(userId)).ToList();
+                var currentList = await repository.GetAllByUserId(userId);
                 int itemsAddedCount = 0;
 
                 foreach (var needed in neededIngredients)
@@ -123,12 +135,14 @@ namespace TeamNut.Services
                     double totalNeeded = needed.QuantityGrams;
 
                     var inStock = inventory.FirstOrDefault(i => i.IngredientId == needed.IngredientId);
+
                     if (inStock != null)
                     {
                         totalNeeded -= inStock.QuantityGrams;
                     }
 
                     var alreadyInList = currentList.FirstOrDefault(s => s.IngredientId == needed.IngredientId);
+
                     if (alreadyInList != null)
                     {
                         totalNeeded -= alreadyInList.QuantityGrams;
@@ -136,8 +150,12 @@ namespace TeamNut.Services
 
                     if (totalNeeded > 0)
                     {
-                        await AddItemAsync(needed.IngredientName, userId, totalNeeded);
-                        itemsAddedCount++;
+                        var added = await AddItemAsync(needed.IngredientName, userId, totalNeeded);
+
+                        if (added != null)
+                        {
+                            itemsAddedCount++;
+                        }
                     }
                 }
 

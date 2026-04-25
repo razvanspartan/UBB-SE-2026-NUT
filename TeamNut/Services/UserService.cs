@@ -1,30 +1,36 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TeamNut.Models;
-using TeamNut.Repositories;
-
 namespace TeamNut.Services
 {
-    public class UserService
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+    using TeamNut.Services.Interfaces;
+
+    public class UserService : IUserService
     {
-        private readonly UserRepository _userRepository;
-        public UserService()
+        private readonly IUserRepository userRepository;
+        private readonly INutritionCalculationService nutritionCalculationService;
+
+        public UserService(
+            IUserRepository userRepository,
+            INutritionCalculationService nutritionCalculationService)
         {
-            _userRepository = new UserRepository();
+            this.userRepository = userRepository;
+            this.nutritionCalculationService = nutritionCalculationService;
         }
 
         public async Task<bool> CheckIfUsernameExistsAsync(string username)
         {
-            var users = await _userRepository.GetAll();
-            return users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            var users = await userRepository.GetAll();
+
+            return users.Any(u => string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
         }
 
-        public async Task<User> LoginAsync(string username, string password)
+        public async Task<User?> LoginAsync(string username, string password)
         {
-            var user = await _userRepository.GetByUsernameAndPassword(username, password);
+            var user = await userRepository.GetByUsernameAndPassword(username, password);
+
             if (user != null)
             {
                 UserSession.Login(user.Id, user.Username, user.Role);
@@ -34,45 +40,38 @@ namespace TeamNut.Services
             return null;
         }
 
-        public async Task<User> RegisterUserAsync(User user)
+        public async Task<User?> RegisterUserAsync(User user)
         {
-            if (await CheckIfUsernameExistsAsync(user.Username))
+            bool userExists = await CheckIfUsernameExistsAsync(user.Username);
+
+            if (userExists)
             {
                 return null;
             }
 
-            await _userRepository.Add(user);
+            await userRepository.Add(user);
             UserSession.Login(user.Id, user.Username, user.Role);
+
             return user;
         }
 
-        public async Task<UserData> AddUserDataAsync(UserData data)
+        public async Task<UserData> AddUserDataAsync(UserData data, DateTimeOffset? birthDate)
         {
-            ApplyCalculatedNutrition(data);
-            await _userRepository.AddUserData(data);
+            nutritionCalculationService.ApplyCalculations(data, birthDate);
+            await userRepository.AddUserData(data);
+
             return data;
         }
 
-        public async Task<UserData> GetUserDataAsync(int userId)
+        public async Task<UserData?> GetUserDataAsync(int userId)
         {
-            return await _userRepository.GetUserDataByUserId(userId);
+            return await userRepository.GetUserDataByUserId(userId);
         }
 
         public async Task UpdateUserDataAsync(UserData data)
         {
-            ApplyCalculatedNutrition(data);
-            await _userRepository.UpdateUserData(data);
-        }
-
-        private static void ApplyCalculatedNutrition(UserData data)
-        {
-            if (data == null) return;
-
-            data.Bmi = data.CalculateBmi();
-            data.CalorieNeeds = data.CalculateCalorieNeeds();
-            data.ProteinNeeds = data.CalculateProteinNeeds();
-            data.FatNeeds = data.CalculateFatNeeds();
-            data.CarbNeeds = data.CalculateCarbNeeds();
+            nutritionCalculationService.ApplyCalculations(data);
+            await userRepository.UpdateUserData(data);
         }
     }
 }

@@ -1,28 +1,27 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using TeamNut.ViewModels;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-
 namespace TeamNut.Views.UserView
 {
+    using System;
+    using System.Linq;
+    using Microsoft.UI.Xaml.Controls;
+    using Microsoft.UI.Xaml.Navigation;
+    using TeamNut.ViewModels;
+    using TeamNut.Services.Interfaces;
+    using Microsoft.Extensions.DependencyInjection;
+
+    /// <summary>
+    /// UserDataPage.
+    /// </summary>
     public sealed partial class UserDataPage : Page
     {
-        public UserViewModel ViewModel => App.UserViewModel;
+        public UserViewModel ViewModel { get; }
+
+        private readonly IValidationService validationService;
+
         public UserDataPage()
         {
             InitializeComponent();
+            ViewModel = App.Services.GetRequiredService<UserViewModel>();
+            validationService = App.Services.GetRequiredService<IValidationService>();
             this.DataContext = ViewModel;
         }
 
@@ -39,7 +38,7 @@ namespace TeamNut.Views.UserView
             ViewModel.SaveDataSuccess -= ViewModel_SaveDataSuccess;
         }
 
-        private void ViewModel_SaveDataSuccess(object sender, EventArgs e)
+        private void ViewModel_SaveDataSuccess(object? sender, EventArgs e)
         {
             if (this.Frame != null)
             {
@@ -49,7 +48,7 @@ namespace TeamNut.Views.UserView
 
         private void NumberInput_BeforeTextChanging(TextBox sender, TextBoxBeforeTextChangingEventArgs args)
         {
-            args.Cancel = args.NewText.Any(c => !char.IsDigit(c));
+            args.Cancel = !validationService.IsNumericOnly(args.NewText);
         }
     }
 }

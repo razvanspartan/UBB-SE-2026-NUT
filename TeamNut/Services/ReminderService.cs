@@ -1,98 +1,111 @@
-using Microsoft.WindowsAppSDK.Runtime;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TeamNut.Models;
-using TeamNut.Repositories;
-
 namespace TeamNut.Services
 {
-    public class ReminderService
-    {
-        private readonly ReminderRepository _reminderRepository;
-        public static event EventHandler<int>? RemindersChanged;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using TeamNut.Models;
+    using TeamNut.Repositories.Interfaces;
+    using TeamNut.Services.Interfaces;
 
-        public ReminderService()
+    public class ReminderService : IReminderService
+    {
+        private readonly IReminderRepository reminderRepository;
+
+        public event EventHandler<int>? RemindersChanged;
+
+        private const int MaxReminderNameLength = 50;
+        private const int InvalidUserId = 0;
+        private const string ResultSuccess = "Success";
+        private const string ErrorInvalidName = "Error: Name must be between 1 and 50 characters.";
+        private const string ConfirmConsumptionLogFormat = "User {0} confirmed meal {1}. Updating logs...";
+
+        public ReminderService(IReminderRepository reminderRepository)
         {
-            _reminderRepository = new ReminderRepository();
-            
+            this.reminderRepository = reminderRepository;
         }
 
         public async Task<Reminder?> GetNextReminder(int userId)
         {
-            return await _reminderRepository.GetNextReminder(userId);
+            return await reminderRepository.GetNextReminder(userId);
         }
 
         public async Task<Reminder?> GetReminderById(int id)
         {
-            return await _reminderRepository.GetById(id);
+            return await reminderRepository.GetById(id);
         }
 
-        
         public async Task<string> SaveReminder(Reminder reminder)
         {
-            
-            if ((reminder.UserId == 0 || reminder.UserId == default) && TeamNut.Models.UserSession.UserId != null)
+            if ((reminder.UserId == InvalidUserId || reminder.UserId == default) && UserSession.UserId != null)
             {
-                reminder.UserId = TeamNut.Models.UserSession.UserId ?? reminder.UserId;
+                reminder.UserId = UserSession.UserId ?? reminder.UserId;
             }
 
-            if (string.IsNullOrWhiteSpace(reminder.Name) || reminder.Name.Length > 50)
+            if (string.IsNullOrWhiteSpace(reminder.Name) || reminder.Name.Length > MaxReminderNameLength)
             {
-                return "Error: Name must be between 1 and 50 characters.";
+                return ErrorInvalidName;
             }
 
-            if (reminder.Id == 0)
-                await _reminderRepository.Add(reminder);
+            if (reminder.Id == InvalidUserId)
+            {
+                await reminderRepository.Add(reminder);
+            }
             else
-                await _reminderRepository.Update(reminder);
-                try
-                {
-                    RemindersChanged?.Invoke(this, reminder.UserId);
-                }
-                catch { }
+            {
+                await reminderRepository.Update(reminder);
+            }
 
-            return "Success";
+            try
+            {
+                RemindersChanged?.Invoke(this, reminder.UserId);
+            }
+            catch
+            {
+                // Ignored to prevent crashing the UI thread on event failures (Idk what is going on with this catchs cant remove them neither)
+            }
 
-            
-          
+            return ResultSuccess;
         }
 
-        
         public async Task ConfirmConsumption(int userId, int mealId)
         {
-
-            Console.WriteLine($"User {userId} confirmed meal {mealId}. Updating logs...");
+            Console.WriteLine(string.Format(ConfirmConsumptionLogFormat, userId, mealId));
+            await Task.CompletedTask;
         }
 
         public async Task<IEnumerable<Reminder>> GetUserReminders(int userId)
         {
-            
-            return await _reminderRepository.GetAllByUserId(userId);
+            return await reminderRepository.GetAllByUserId(userId);
         }
-        
 
         public async Task DeleteReminder(int id)
         {
-            try
+            var existing = await reminderRepository.GetById(id);
+            await reminderRepository.Delete(id);
+
+            if (existing != null)
             {
-                var existing = await _reminderRepository.GetById(id);
-                await _reminderRepository.Delete(id);
-                if (existing != null)
+                try
                 {
                     RemindersChanged?.Invoke(this, existing.UserId);
                 }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"RemindersChanged handler error: {ex.Message}");
+                }
             }
-            catch { }
         }
 
-        public static void NotifyRemindersChangedForUser(int userId)
+        public void NotifyRemindersChangedForUser(int userId)
         {
             try
             {
                 RemindersChanged?.Invoke(null, userId);
             }
-            catch { }
+            catch
+            {
+                // Ignored to prevent crash (It crashes idk why sorry I keep this one like this)
+            }
         }
     }
 }

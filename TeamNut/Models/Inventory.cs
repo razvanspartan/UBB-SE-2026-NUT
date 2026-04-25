@@ -1,23 +1,23 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace TeamNut.Models
 {
+    using CommunityToolkit.Mvvm.ComponentModel;
+
+    /// <summary>Represents a user's inventory entry for a food ingredient.</summary>
     public partial class Inventory : ObservableObject
     {
         [ObservableProperty]
-        private int _id;
+        public partial int Id { get; set; }
 
         [ObservableProperty]
-        private int _userId;
+        public partial int UserId { get; set; }
 
         [ObservableProperty]
-        private int _ingredientId;
+        public partial int IngredientId { get; set; }
 
         [ObservableProperty]
-        private int _quantityGrams;
+        public partial int QuantityGrams { get; set; }
 
-        
         [ObservableProperty]
-        private string _ingredientName = string.Empty;
+        public partial string IngredientName { get; set; } = string.Empty;
     }
 }

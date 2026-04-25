@@ -1,17 +1,25 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using TeamNut.ViewModels;
-using TeamNut.Views;
-using TeamNut.Views.UserView;
-using System.Diagnostics;
-
 namespace TeamNut
 {
+    using System;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using TeamNut.ModelViews;
+    using TeamNut.Repositories;
+    using TeamNut.Repositories.Interfaces;
+    using TeamNut.Services;
+    using TeamNut.Services.Interfaces;
+    using TeamNut.ViewModels;
+    using TeamNut.Views;
+    using TeamNut.Views.MealPlanView;
+    using TeamNut.Views.UserView;
+
+    /// <summary>Application entry point and lifecycle host.</summary>
     public partial class App : Application
     {
-        internal Window? _window;
+        internal Window? AppWindow;
 
-        public static UserViewModel UserViewModel { get; } = new UserViewModel();
+        public static IServiceProvider Services { get; private set; } = null!;
 
         public App()
         {
@@ -21,39 +29,64 @@ namespace TeamNut
             };
 
             InitializeComponent();
-
-            EnsureLocalDbStarted();
+            Services = ConfigureServices();
         }
 
-        private void EnsureLocalDbStarted()
+        private static IServiceProvider ConfigureServices()
         {
-            try
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "sqllocaldb",
-                    Arguments = "start MSSQLLocalDB",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
+            var services = new ServiceCollection();
 
-                using var process = Process.Start(startInfo);
-                process?.WaitForExit();
-            }
-            catch
-            {
-            }
+            services.AddSingleton<IDbConfig, DbConfig>();
+
+            services.AddSingleton<IValidationService, ValidationService>();
+            services.AddSingleton<INutritionCalculationService, NutritionCalculationService>();
+            services.AddSingleton<IFilteringService, FilteringService>();
+            services.AddSingleton<IPaginationService, PaginationService>();
+            services.AddSingleton<IFormattingService, FormattingService>();
+
+            services.AddTransient<IChatRepository, ChatRepository>();
+            services.AddTransient<IChatService, ChatService>();
+            services.AddTransient<NutritionistChatViewModel>();
+
+            services.AddTransient<IDailyLogRepository, DailyLogRepository>();
+            services.AddTransient<IDailyLogService, DailyLogService>();
+            services.AddTransient<DailyLogViewModel>();
+
+            services.AddTransient<IShoppingListRepository, ShoppingListRepository>();
+            services.AddTransient<IShoppingListService, ShoppingListService>();
+            services.AddTransient<ShoppingListViewModel>();
+
+            services.AddTransient<IIngredientRepository, IngredientRepository>();
+
+            services.AddTransient<IInventoryRepository, InventoryRepository>();
+            services.AddTransient<IInventoryService, InventoryService>();
+            services.AddTransient<InventoryViewModel>();
+
+            services.AddTransient<IMealPlanRepository, MealPlanRepository>();
+            services.AddTransient<IMealPlanService, MealPlanService>();
+            services.AddTransient<MealPlanViewModel>();
+
+            services.AddTransient<IMealRepository, MealRepository>();
+            services.AddTransient<IMealService, MealService>();
+            services.AddTransient<MealSearchViewModel>();
+
+            services.AddTransient<IReminderRepository, ReminderRepository>();
+            services.AddSingleton<IReminderService, ReminderService>();
+            services.AddTransient<RemindersViewModel>();
+
+            services.AddTransient<IUserRepository, UserRepository>();
+            services.AddTransient<IUserService, UserService>();
+            services.AddSingleton<UserViewModel>();
+
+            services.AddTransient<MainViewModel>();
+            return services.BuildServiceProvider();
         }
 
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
-
-            _window.Content = new UserView();
-
-            _window.Activate();
+            AppWindow = new MainWindow();
+            AppWindow.Content = new UserView();
+            AppWindow.Activate();
         }
     }
 }

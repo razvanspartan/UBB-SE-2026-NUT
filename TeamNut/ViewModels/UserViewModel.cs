@@ -1,21 +1,32 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using TeamNut.Models;
-using TeamNut.Services;
-
 namespace TeamNut.ViewModels
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using CommunityToolkit.Mvvm.Input;
+    using TeamNut.Models;
+    using TeamNut.Services;
+    using TeamNut.Services.Interfaces;
+
     public partial class UserViewModel : ObservableObject
     {
-        [ObservableProperty]
-        public partial User CurrentUser { get; set; } = new();
+        private const string RoleNutritionist = "Nutritionist";
+        private const string RoleUser = "User";
+        private const string ErrorUsernameExists = "Username already exists. Please choose another one.";
+        private const string ErrorInvalidBirthdate = "Please select a valid birthdate.";
+        private const string ErrorRegistrationFailed = "Registration failed. Username might already exist.";
+        private const string ErrorUsernamePasswordRequired = "Username and Password are required.";
+        private const string ErrorInvalidCredentials = "Invalid username or password.";
+        private const string ErrorDatabaseConnectionFormat = "Database Connection Failed! Start SSMS and check your server. Error: {0}";
+        private const string ErrorSavingDataFormat = "An error occurred while saving: {0}";
 
         [ObservableProperty]
-        public partial UserData CurrentUserData { get; set; } = new();
+        public partial User CurrentUser { get; set; } = new User();
+
+        [ObservableProperty]
+        public partial UserData CurrentUserData { get; set; } = new UserData();
 
         [ObservableProperty]
         public partial bool IsNutritionistChecked { get; set; }
@@ -26,15 +37,22 @@ namespace TeamNut.ViewModels
         [ObservableProperty]
         public partial DateTimeOffset SelectedDate { get; set; } = DateTimeOffset.Now;
 
-        public event EventHandler RegistrationValid;
-        public event EventHandler LoginSuccess;
-        public event EventHandler SaveDataSuccess;
+        public event EventHandler? RegistrationValid;
+        public event EventHandler? LoginSuccess;
+        public event EventHandler? SaveDataSuccess;
 
-        private readonly UserService _userService;
+        private readonly IUserService userService;
+        private readonly IValidationService validationService;
+        private readonly INutritionCalculationService nutritionCalculationService;
 
-        public UserViewModel()
+        public UserViewModel(
+            IUserService userService,
+            IValidationService validationService,
+            INutritionCalculationService nutritionCalculationService)
         {
-            _userService = new UserService();
+            this.userService = userService;
+            this.validationService = validationService;
+            this.nutritionCalculationService = nutritionCalculationService;
         }
 
         [RelayCommand]
@@ -42,34 +60,32 @@ namespace TeamNut.ViewModels
         {
             StatusMessage = string.Empty;
 
-            if (IsNutritionistChecked)
-                CurrentUser.Role = "Nutritionist";
-            else
-                CurrentUser.Role = "User";
+            CurrentUser.Role = IsNutritionistChecked
+                ? RoleNutritionist
+                : RoleUser;
 
-            List<string> errors = CurrentUser.ValidateAndReturnErrors();
-            if (errors.Any())
+            List<string> errors = validationService.ValidateUser(CurrentUser);
+            if (errors.Count > 0)
             {
                 StatusMessage = string.Join(Environment.NewLine, errors);
                 return;
             }
 
-            if (await _userService.CheckIfUsernameExistsAsync(CurrentUser.Username))
+            if (await userService.CheckIfUsernameExistsAsync(CurrentUser.Username))
             {
-                StatusMessage = "Username already exists. Please choose another one.";
+                StatusMessage = ErrorUsernameExists;
                 return;
             }
 
-            if (CurrentUser.Role == "User")
+            if (CurrentUser.Role == RoleUser)
             {
                 RegistrationValid?.Invoke(this, EventArgs.Empty);
             }
             else
             {
-                var registeredUser = await _userService.RegisterUserAsync(CurrentUser);
+                var registeredUser = await userService.RegisterUserAsync(CurrentUser);
                 if (registeredUser != null)
                 {
-                    UserSession.Login(registeredUser.Id, registeredUser.Username, registeredUser.Role);
                     LoginSuccess?.Invoke(this, EventArgs.Empty);
                 }
             }
@@ -82,41 +98,35 @@ namespace TeamNut.ViewModels
 
             try
             {
-                List<string> errors = CurrentUserData.GetValidationErrors();
-                if (errors.Any())
+                List<string> errors = validationService.ValidateUserData(CurrentUserData);
+                if (errors.Count > 0)
                 {
                     StatusMessage = string.Join(Environment.NewLine, errors);
                     return;
                 }
 
-                CurrentUserData.Age = CurrentUserData.CalculateAge(SelectedDate);
-                if (CurrentUserData.Age <= 0)
+                int age = nutritionCalculationService.CalculateAge(SelectedDate);
+                if (age <= 0)
                 {
-                    StatusMessage = "Please select a valid birthdate.";
+                    StatusMessage = ErrorInvalidBirthdate;
                     return;
                 }
-                CurrentUserData.Bmi = CurrentUserData.CalculateBmi();
-                CurrentUserData.CalorieNeeds = CurrentUserData.CalculateCalorieNeeds();
-                CurrentUserData.ProteinNeeds = CurrentUserData.CalculateProteinNeeds();
-                CurrentUserData.FatNeeds = CurrentUserData.CalculateFatNeeds();
-                CurrentUserData.CarbNeeds = CurrentUserData.CalculateCarbNeeds();
 
-                var registeredUser = await _userService.RegisterUserAsync(CurrentUser);
+                var registeredUser = await userService.RegisterUserAsync(CurrentUser);
                 if (registeredUser == null)
                 {
-                    StatusMessage = "Registration failed. Username might already exist.";
+                    StatusMessage = ErrorRegistrationFailed;
                     return;
                 }
 
                 CurrentUserData.UserId = registeredUser.Id;
-                await _userService.AddUserDataAsync(CurrentUserData);
+                await userService.AddUserDataAsync(CurrentUserData, SelectedDate);
 
-                UserSession.Login(registeredUser.Id, registeredUser.Username, registeredUser.Role);
                 SaveDataSuccess?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
-                StatusMessage = "An error occurred while saving: " + ex.Message;
+                StatusMessage = string.Format(ErrorSavingDataFormat, ex.Message);
             }
         }
 
@@ -128,27 +138,29 @@ namespace TeamNut.ViewModels
             if (string.IsNullOrWhiteSpace(CurrentUser.Username) ||
                 string.IsNullOrWhiteSpace(CurrentUser.Password))
             {
-                StatusMessage = "Username and Password are required.";
+                StatusMessage = ErrorUsernamePasswordRequired;
                 return;
             }
 
             try
             {
-                var user = await _userService.LoginAsync(CurrentUser.Username, CurrentUser.Password);
+                var user = await userService.LoginAsync(
+                    CurrentUser.Username,
+                    CurrentUser.Password);
 
                 if (user != null)
                 {
-                    UserSession.Login(user.Id, user.Username, user.Role);
+                    CurrentUser = user;
                     LoginSuccess?.Invoke(this, EventArgs.Empty);
                 }
                 else
                 {
-                    StatusMessage = "Invalid username or password.";
+                    StatusMessage = ErrorInvalidCredentials;
                 }
             }
             catch (Exception ex)
             {
-                StatusMessage = "Database Connection Failed! Start SSMS and check your server. Error: " + ex.Message;
+                StatusMessage = string.Format(ErrorDatabaseConnectionFormat, ex.Message);
             }
         }
     }

@@ -1,40 +1,56 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using TeamNut.Models;
-using TeamNut.ViewModels;
-
 namespace TeamNut.Views.CalorieLoggingView
 {
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using Microsoft.UI.Xaml.Navigation;
+    using TeamNut.Models;
+    using TeamNut.ViewModels;
+    using Microsoft.Extensions.DependencyInjection;
+
+    /// <summary>
+    /// CalorieLoggingPage.
+    /// </summary>
     public sealed partial class CalorieLoggingPage : Page
     {
-        private readonly DailyLogViewModel _viewModel;
+        private DailyLogViewModel ViewModel { get; }
 
         public CalorieLoggingPage()
         {
             this.InitializeComponent();
 
-            _viewModel = new DailyLogViewModel();
-            this.DataContext = _viewModel;
+            ViewModel = App.Services.GetRequiredService<DailyLogViewModel>();
+            this.DataContext = ViewModel;
 
             LoadData();
         }
 
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            await ViewModel.LoadAsync();
+        }
+
+        internal async System.Threading.Tasks.Task RefreshAsync()
+        {
+            await ViewModel.LoadAsync();
+        }
+
         private async void LoadData()
         {
-            await _viewModel.LoadAsync();
+            await ViewModel.LoadAsync();
         }
 
         private void MealSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
             if (args.SelectedItem is Meal meal)
             {
-                _viewModel.SelectedMeal = meal;
+                ViewModel.SelectedMeal = meal;
             }
         }
 
         private async void LogMeal_Click(object sender, RoutedEventArgs e)
         {
-            await _viewModel.LogSelectedMealAsync();
+            await ViewModel.LogSelectedMealAsync();
         }
     }
 }

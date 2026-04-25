@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamNut", "TeamNut\TeamNut.csproj", "{7BC5ABBF-B119-F0DE-33C4-4B8834A20874}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamNut.IntegrationTests", "TeamNut.IntegrationTests\TeamNut.IntegrationTests.csproj", "{9CA6E063-7EA6-4F4C-9578-454A6F68599C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamNut.Tests", "TeamNut.Tests\TeamNut.Tests.csproj", "{3B45691F-8976-4272-B4F8-6DBCD2E76D32}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BC5ABBF-B119-F0DE-33C4-4B8834A20874}.Debug|x64.ActiveCfg = Debug|x64
+		{7BC5ABBF-B119-F0DE-33C4-4B8834A20874}.Debug|x64.Build.0 = Debug|x64
+		{7BC5ABBF-B119-F0DE-33C4-4B8834A20874}.Release|x64.ActiveCfg = Release|x64
+		{7BC5ABBF-B119-F0DE-33C4-4B8834A20874}.Release|x64.Build.0 = Release|x64
+		{9CA6E063-7EA6-4F4C-9578-454A6F68599C}.Debug|x64.ActiveCfg = Debug|x64
+		{9CA6E063-7EA6-4F4C-9578-454A6F68599C}.Debug|x64.Build.0 = Debug|x64
+		{9CA6E063-7EA6-4F4C-9578-454A6F68599C}.Release|x64.ActiveCfg = Release|x64
+		{9CA6E063-7EA6-4F4C-9578-454A6F68599C}.Release|x64.Build.0 = Release|x64
+		{3B45691F-8976-4272-B4F8-6DBCD2E76D32}.Debug|x64.ActiveCfg = Debug|x64
+		{3B45691F-8976-4272-B4F8-6DBCD2E76D32}.Debug|x64.Build.0 = Debug|x64
+		{3B45691F-8976-4272-B4F8-6DBCD2E76D32}.Release|x64.ActiveCfg = Release|x64
+		{3B45691F-8976-4272-B4F8-6DBCD2E76D32}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ECC144C1-59EF-41C6-9CE6-C4AF3A14F15C}
+	EndGlobalSection
+EndGlobal

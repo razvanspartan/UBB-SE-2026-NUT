@@ -1,27 +1,34 @@
-using System;
-using System.IO;
-using System.Linq;
-
 namespace TeamNut.Repositories
 {
-    internal class DbConfig
+    using System;
+    using System.IO;
+    using System.Linq;
+    using TeamNut.Repositories.Interfaces;
+
+    internal class DbConfig : IDbConfig
     {
-        public static string ConnectionString
+        private const string ProjectFileSearchPattern = "*.csproj";
+        private const string DatabaseFileName = "NutData.db";
+        private const string ConnectionStringFormat = "Data Source={0}";
+        private const string EmptyPathFallback = "";
+
+        public string ConnectionString
         {
             get
             {
-                
-                string directory = AppDomain.CurrentDomain.BaseDirectory;
+                string? directory = AppDomain.CurrentDomain.BaseDirectory;
 
-                
-                while (directory != null && !Directory.GetFiles(directory, "*.csproj").Any())
+                while (directory != null && !Directory.GetFiles(directory, ProjectFileSearchPattern).Any())
                 {
-                    directory = Directory.GetParent(directory)?.FullName;
+                    var parentDirectory = Directory.GetParent(directory);
+                    directory = parentDirectory?.FullName;
                 }
 
-                
-                string dbPath = Path.Combine(directory ?? "", "NutData.db");
-                return $"Data Source={dbPath}";
+                string databasePath = Path.Combine(
+                    directory ?? EmptyPathFallback,
+                    DatabaseFileName);
+
+                return string.Format(ConnectionStringFormat, databasePath);
             }
         }
     }

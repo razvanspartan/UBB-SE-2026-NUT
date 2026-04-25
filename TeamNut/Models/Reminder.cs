@@ -1,9 +1,10 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.ComponentModel.DataAnnotations;
-
 namespace TeamNut.Models
 {
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using CommunityToolkit.Mvvm.ComponentModel;
+
+    /// <summary>Represents a scheduled health reminder for a user.</summary>
     public partial class Reminder : ObservableValidator
     {
         [ObservableProperty]
@@ -19,17 +20,17 @@ namespace TeamNut.Models
         public partial string Name { get; set; } = string.Empty;
 
         [ObservableProperty]
-        public partial bool HasSound { get; set; } = false;
+        public partial bool HasSound { get; set; }
 
         [ObservableProperty]
         [Required]
         public partial TimeSpan Time { get; set; }
 
-        public string ReminderDate { get; set; }
+        public string ReminderDate { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial string Frequency { get; set; } = "Once";
 
-        public string FullDateTimeDisplay => $"{ReminderDate} at {Time}"; 
+        public string FullDateTimeDisplay => $"{ReminderDate ?? "No date"} at {Time}";
     }
 }

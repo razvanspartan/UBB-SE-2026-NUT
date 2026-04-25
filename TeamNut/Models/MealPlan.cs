@@ -1,12 +1,16 @@
-using System;
-
 namespace TeamNut.Models
 {
+    using System;
+
+    /// <summary>Represents a generated meal plan for a user.</summary>
     public class MealPlan
     {
-        public int Id { get; set; } // mealplan_id
-        public int UserId { get; set; } // user_id
-        public DateTime CreatedAt { get; set; } // created_at
-        public string GoalType { get; set; } = string.Empty;// goal type
+        public int Id { get; set; }
+
+        public int UserId { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        public string GoalType { get; set; } = string.Empty;
     }
 }

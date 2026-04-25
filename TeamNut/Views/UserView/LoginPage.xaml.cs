@@ -1,28 +1,23 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using TeamNut.ViewModels; 
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-
 namespace TeamNut.Views.UserView
 {
+    using System;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using Microsoft.UI.Xaml.Navigation;
+    using TeamNut.ViewModels;
+    using Microsoft.Extensions.DependencyInjection;
+
+    /// <summary>
+    /// LoginPage.
+    /// </summary>
     public sealed partial class LoginPage : Page
     {
-        public UserViewModel ViewModel => App.UserViewModel;
+        public UserViewModel ViewModel { get; }
+
         public LoginPage()
         {
             InitializeComponent();
+            ViewModel = App.Services.GetRequiredService<UserViewModel>();
             this.DataContext = ViewModel;
         }
 
@@ -39,7 +34,7 @@ namespace TeamNut.Views.UserView
             ViewModel.LoginSuccess -= ViewModel_LoginSuccess;
         }
 
-        private void ViewModel_LoginSuccess(object sender, EventArgs e)
+        private void ViewModel_LoginSuccess(object? sender, EventArgs e)
         {
             if (this.Frame != null)
             {
@@ -54,6 +49,7 @@ namespace TeamNut.Views.UserView
                 this.Frame.Navigate(typeof(RegisterPage));
             }
         }
+
         private void PasswordInput_PasswordChanged(object sender, RoutedEventArgs e)
         {
             if (sender is PasswordBox pwBox && ViewModel.CurrentUser != null)
